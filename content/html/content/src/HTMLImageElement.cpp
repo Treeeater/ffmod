@@ -101,7 +101,11 @@ HTMLImageElement::GetSrc(JSContext *cx, nsAString& aValue)
 
 void HTMLImageElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult& aError)
 {
-	if (cx != NULL) yuchen::record("access.txt", "Image src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aSrc)));
+	if (cx != NULL) {
+		std::string s = ToNewUTF8String(aSrc);
+		//sometimes data is directly given to the image, w/o issuing a network request. this is a false positive that we should not record.
+		if (s.substr(0, 5) != "data:") yuchen::record("access.txt", "Image src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + s);
+	}
 	SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
 }
 
