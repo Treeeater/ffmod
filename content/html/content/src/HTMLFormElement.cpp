@@ -59,6 +59,8 @@
 
 // images
 #include "mozilla/dom/HTMLImageElement.h"
+#include "../../../../yuchen/utils.h"
+#include "jsapi.h"
 
 // construction, destruction
 nsGenericHTMLElement*
@@ -260,6 +262,27 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLFormElement, Method, method,
 NS_IMPL_BOOL_ATTR(HTMLFormElement, NoValidate, novalidate)
 NS_IMPL_STRING_ATTR(HTMLFormElement, Name, name)
 NS_IMPL_STRING_ATTR(HTMLFormElement, Target, target)
+
+
+void
+HTMLFormElement::Submit(JSContext *cx, ErrorResult& aRv)
+{
+	nsresult rv;
+	nsString aSpec;
+	rv = GetAction(aSpec);
+	if (cx != NULL) yuchen::record("access.txt", "Form submitted", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Action URL is: " + std::string(ToNewUTF8String(aSpec)));
+	// Send the submit event
+	nsRefPtr<nsPresContext> presContext = GetPresContext();
+	if (mPendingSubmission) {
+		// aha, we have a pending submission that was not flushed
+		// (this happens when form.submit() is called twice)
+		// we have to delete it and build a new one since values
+		// might have changed inbetween (we emulate IE here, that's all)
+		mPendingSubmission = nullptr;
+	}
+
+	aRv = DoSubmitOrReset(nullptr, NS_FORM_SUBMIT);
+}
 
 void
 HTMLFormElement::Submit(ErrorResult& aRv)

@@ -380,6 +380,8 @@ public:
 
   int32_t Length();
 
+  void Submit(JSContext *cx, ErrorResult& aRv);
+
   void Submit(ErrorResult& aRv);
 
   // XPCOM Reset() is OK
