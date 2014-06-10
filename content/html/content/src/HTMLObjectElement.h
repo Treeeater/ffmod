@@ -32,6 +32,7 @@ public:
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
   // nsIDOMHTMLObjectElement
+  NS_IMETHODIMP GetData(JSContext *cx, nsAString& aValue);
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
@@ -85,6 +86,7 @@ public:
 
   // Web IDL binding methods
   // XPCOM GetData is ok; note that it's a URI attribute with a weird base URI
+  void SetData(JSContext *cx, const nsAString& aValue, ErrorResult& aRv);
   void SetData(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::data, aValue, aRv);

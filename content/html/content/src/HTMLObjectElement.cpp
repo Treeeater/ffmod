@@ -20,6 +20,9 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
+#include "../../../../yuchen/utils.h"
+#include "../../../../js/src/jsfriendapi.h"
+#include "../../../../js/src/jsapi.h"
 
 namespace mozilla {
 namespace dom {
@@ -309,6 +312,14 @@ NS_IMPL_URI_ATTR_WITH_BASE(HTMLObjectElement, Code, code, codebase)
 NS_IMPL_URI_ATTR(HTMLObjectElement, CodeBase, codebase)
 NS_IMPL_STRING_ATTR(HTMLObjectElement, CodeType, codetype)
 NS_IMPL_URI_ATTR_WITH_BASE(HTMLObjectElement, Data, data, codebase)
+
+NS_IMETHODIMP
+HTMLObjectElement::GetData(JSContext *cx, nsAString& aValue)
+{
+	GetURIAttr(nsGkAtoms::data, nsGkAtoms::codebase, aValue);
+	return NS_OK;
+}
+
 NS_IMPL_BOOL_ATTR(HTMLObjectElement, Declare, declare)
 NS_IMPL_STRING_ATTR(HTMLObjectElement, Height, height)
 NS_IMPL_INT_ATTR(HTMLObjectElement, Hspace, hspace)
@@ -451,6 +462,13 @@ HTMLObjectElement::WrapNode(JSContext* aCx)
   }
   SetupProtoChain(aCx, obj);
   return obj;
+}
+
+void
+HTMLObjectElement::SetData(JSContext *cx, const nsAString& aValue, ErrorResult& aRv)
+{
+	if (cx != NULL) yuchen::record("access.txt", "Object data set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "data set to: " + std::string(ToNewUTF8String(aValue)));
+	SetHTMLAttr(nsGkAtoms::data, aValue, aRv);
 }
 
 } // namespace dom
