@@ -274,6 +274,9 @@ public:
 
     return rcFrame.x;
   }
+
+  int32_t OffsetWidth(JSContext *cx);
+  
   int32_t OffsetWidth()
   {
     mozilla::CSSIntRect rcFrame;
@@ -281,6 +284,9 @@ public:
 
     return rcFrame.width;
   }
+
+  int32_t OffsetHeight(JSContext *cx);
+
   int32_t OffsetHeight()
   {
     mozilla::CSSIntRect rcFrame;

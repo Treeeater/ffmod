@@ -104,6 +104,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
+#include "../../../../yuchen/utils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -261,6 +262,19 @@ nsGenericHTMLElement::Dataset()
   nsRefPtr<nsDOMStringMap> ret = slots->mDataset;
   return ret.forget();
 }
+
+int32_t nsGenericHTMLElement::OffsetHeight(JSContext *cx)
+{
+	//if (cx != NULL) yuchen::record("access.txt", "OffsetHeight accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return OffsetHeight();
+}
+
+int32_t nsGenericHTMLElement::OffsetWidth(JSContext *cx)
+{
+	//if (cx != NULL) yuchen::record("access.txt", "OffsetWidth accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return OffsetWidth();
+}
+
 
 NS_IMETHODIMP
 nsGenericHTMLElement::GetDataset(nsISupports** aDataset)
