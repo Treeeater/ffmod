@@ -78,6 +78,11 @@ public:
   }
 
   // MimeType WebIDL methods
+  void GetDescription(JSContext *cx, nsString& retval) const;
+  nsPluginElement *GetEnabledPlugin(JSContext *cx) const;
+  void GetSuffixes(JSContext *cx, nsString& retval) const;
+  void GetType(JSContext *cx, nsString& retval) const;
+
   void GetDescription(nsString& retval) const;
   nsPluginElement *GetEnabledPlugin() const;
   void GetSuffixes(nsString& retval) const;

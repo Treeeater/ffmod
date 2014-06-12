@@ -14,6 +14,9 @@
 #include "nsIMIMEInfo.h"
 #include "Navigator.h"
 #include "nsServiceManagerUtils.h"
+#include "../../yuchen/utils.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -260,6 +263,34 @@ JSObject*
 nsMimeType::WrapObject(JSContext* aCx)
 {
   return MimeTypeBinding::Wrap(aCx, this);
+}
+
+void
+nsMimeType::GetDescription(JSContext *cx, nsString& retval) const
+{
+	GetDescription(retval);
+	if (cx != NULL) yuchen::record("access.txt", "navigator.mimetypes[].description read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Description: " + std::string(ToNewUTF8String(retval)));
+}
+
+nsPluginElement*
+nsMimeType::GetEnabledPlugin(JSContext *cx) const
+{
+	if (cx != NULL) yuchen::record("access.txt", "navigator.mimetypes[].enabledPlugin read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetEnabledPlugin();
+}
+
+void
+nsMimeType::GetSuffixes(JSContext *cx, nsString& retval) const
+{
+	GetSuffixes(retval);
+	if (cx != NULL) yuchen::record("access.txt", "navigator.mimetypes[].suffixes read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Suffixes: " + std::string(ToNewUTF8String(retval)));
+}
+
+void
+nsMimeType::GetType(JSContext *cx, nsString& aRetval) const
+{
+	GetType(aRetval);
+	if (cx != NULL) yuchen::record("access.txt", "navigator.mimetypes[].type read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Type: " + std::string(ToNewUTF8String(aRetval)));
 }
 
 void

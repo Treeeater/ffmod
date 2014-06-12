@@ -94,6 +94,10 @@ public:
 
   // Plugin WebIDL methods
 
+  void GetDescription(JSContext *cx, nsString& retval) const;
+  void GetFilename(JSContext *cx, nsString& retval) const;
+  void GetVersion(JSContext *cx, nsString& retval) const;
+  void GetName(JSContext *cx, nsString& retval) const;
   void GetDescription(nsString& retval) const;
   void GetFilename(nsString& retval) const;
   void GetVersion(nsString& retval) const;
@@ -103,6 +107,7 @@ public:
   nsMimeType* IndexedGetter(uint32_t index, bool &found);
   nsMimeType* NamedGetter(const nsAString& name, bool &found);
   bool NameIsEnumerable(const nsAString& aName);
+  uint32_t Length(JSContext *cx);
   uint32_t Length();
   void GetSupportedNames(unsigned, nsTArray<nsString>& retval);
 
