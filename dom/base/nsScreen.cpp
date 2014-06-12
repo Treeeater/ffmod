@@ -16,6 +16,9 @@
 #include "nsLayoutUtils.h"
 #include "nsJSUtils.h"
 #include "nsDeviceContext.h"
+#include "../../yuchen/utils.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -358,4 +361,45 @@ nsScreen::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
   hal::UnlockScreenOrientation();
 
   return NS_OK;
+}
+
+int32_t nsScreen::GetTop(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.top read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetTop(aRv);
+}
+int32_t nsScreen::GetLeft(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.left read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetLeft(aRv);
+}
+int32_t nsScreen::GetWidth(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.width read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetWidth(aRv);
+}
+int32_t nsScreen::GetHeight(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.height read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetHeight(aRv);
+}
+int32_t nsScreen::GetPixelDepth(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.pixel read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetPixelDepth(aRv);
+}
+int32_t nsScreen::GetColorDepth(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.colorDepth read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetColorDepth(aRv);
+}
+int32_t nsScreen::GetAvailTop(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.availTop read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetAvailTop(aRv);
+}
+int32_t nsScreen::GetAvailLeft(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.availLeft read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetAvailLeft(aRv);
+}
+int32_t nsScreen::GetAvailWidth(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.availWidth read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetAvailWidth(aRv);
+}
+int32_t nsScreen::GetAvailHeight(JSContext *cx, ErrorResult& aRv){
+	if (cx != NULL) yuchen::record("access.txt", "screen.availHeight read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	return GetAvailHeight(aRv);
 }

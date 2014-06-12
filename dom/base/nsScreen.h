@@ -34,6 +34,17 @@ public:
     return GetOwner();
   }
 
+  int32_t GetTop(JSContext *cx, ErrorResult& aRv);
+  int32_t GetLeft(JSContext *cx, ErrorResult& aRv);
+  int32_t GetWidth(JSContext *cx, ErrorResult& aRv);
+  int32_t GetHeight(JSContext *cx, ErrorResult& aRv);
+  int32_t GetPixelDepth(JSContext *cx, ErrorResult& aRv);
+  int32_t GetColorDepth(JSContext *cx, ErrorResult& aRv);
+  int32_t GetAvailTop(JSContext *cx, ErrorResult& aRv);
+  int32_t GetAvailLeft(JSContext *cx, ErrorResult& aRv);
+  int32_t GetAvailWidth(JSContext *cx, ErrorResult& aRv);
+  int32_t GetAvailHeight(JSContext *cx, ErrorResult& aRv);
+
   int32_t GetTop(ErrorResult& aRv)
   {
     nsRect rect;
