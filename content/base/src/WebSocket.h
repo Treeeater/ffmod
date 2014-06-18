@@ -83,35 +83,14 @@ public: // WebIDL interface:
 												 ErrorResult& rv);
 
   static already_AddRefed<WebSocket> Constructor(const GlobalObject& aGlobal,
-												JSContext *cx,
-												  const nsAString& aUrl,
-												  ErrorResult& rv);
-
-  static already_AddRefed<WebSocket> Constructor(const GlobalObject& aGlobal,
                                                  const nsAString& aUrl,
                                                  const nsAString& aProtocol,
                                                  ErrorResult& rv);
 
   static already_AddRefed<WebSocket> Constructor(const GlobalObject& aGlobal,
-	  JSContext *cx,
-	  const nsAString& aUrl,
-	  const nsAString& aProtocol,
-	  ErrorResult& rv){
-	  return Constructor(aGlobal, aUrl, aProtocol, rv);
-  }
-
-  static already_AddRefed<WebSocket> Constructor(const GlobalObject& aGlobal,
                                                  const nsAString& aUrl,
                                                  const Sequence<nsString>& aProtocols,
 												 ErrorResult& rv);
-
-  static already_AddRefed<WebSocket> Constructor(const GlobalObject& aGlobal,
-	  JSContext *cx,
-	  const nsAString& aUrl,
-	  const Sequence<nsString>& aProtocols,
-	  ErrorResult& rv){
-	  return Constructor(aGlobal, aUrl, aProtocols, rv);
-  }
 
   // webIDL: readonly attribute DOMString url
   void GetUrl(nsAString& aResult);
@@ -157,7 +136,16 @@ public: // WebIDL interface:
   void Send(const ArrayBuffer& aData,
             ErrorResult& aRv);
   void Send(const ArrayBufferView& aData,
-            ErrorResult& aRv);
+	  ErrorResult& aRv);
+
+  void Send(JSContext *cx, const nsAString& aData,
+	  ErrorResult& aRv);
+  void Send(JSContext *cx, nsIDOMBlob* aData,
+	  ErrorResult& aRv);
+  void Send(JSContext *cx, const ArrayBuffer& aData,
+	  ErrorResult& aRv);
+  void Send(JSContext *cx, const ArrayBufferView& aData,
+	  ErrorResult& aRv);
 
 private: // constructor && distructor
   WebSocket(nsPIDOMWindow* aOwnerWindow);
@@ -173,7 +161,13 @@ protected:
             const nsACString& aMsgString,
             uint32_t aMsgLength,
             bool aIsBinary,
-            ErrorResult& aRv);
+			ErrorResult& aRv);
+
+  void Send(JSContext *cx, nsIInputStream* aMsgStream,
+	  const nsACString& aMsgString,
+	  uint32_t aMsgLength,
+	  bool aIsBinary,
+	  ErrorResult& aRv);
 
   nsresult ParseURL(const nsString& aURL);
   nsresult EstablishConnection();

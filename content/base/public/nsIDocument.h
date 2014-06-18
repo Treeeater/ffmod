@@ -2722,25 +2722,26 @@ public:
 				else m[k]++;
 			}
 		}
-		s += "URL: " + hostURI + "\n---\n";
-		for (auto domain : mRecords){
-			s += "tpd: " + domain.first + ":\n";
-			for (auto ra_r : domain.second.ra_r){
-				std::string k = domain.first + ra_r.second.resource + ra_r.second.additionalInfo;
-				if (m.find(k) == m.end()) continue;
-				s += "_t: " + std::to_string(m[k]) + "\n";
-				s += "_r: " + ra_r.second.resource + "\n";
-				s += "_a: " + ra_r.second.additionalInfo + "\n";
-				m.erase(k);
+		if (!m.empty()){
+			s += "URL: " + hostURI + "\n---\n";
+			for (auto domain : mRecords){
+				s += "tpd: " + domain.first + ":\n";
+				for (auto ra_r : domain.second.ra_r){
+					std::string k = domain.first + ra_r.second.resource + ra_r.second.additionalInfo;
+					if (m.find(k) == m.end()) continue;
+					s += "_t: " + std::to_string(m[k]) + "\n";
+					s += "_r: " + ra_r.second.resource + "\n";
+					s += "_a: " + ra_r.second.additionalInfo + "\n";
+					m.erase(k);
+				}
+				s += "---\n";
 			}
-			s += "---\n";
+			std::string fileName = sanitizeFileName(hostURI).substr(0, 32) + ".txt";
+			std::ofstream myfile;
+			myfile.open(fileName, std::ios::out | std::ios::app);
+			myfile << s;
+			myfile.close();
 		}
-		std::string fileName = sanitizeFileName(hostURI).substr(0, 32) + ".txt";
-		std::ofstream myfile;
-		myfile.open(fileName, std::ios::out | std::ios::app);
-		myfile << s;
-		myfile.close();
-		return;
 	}
 
 };
