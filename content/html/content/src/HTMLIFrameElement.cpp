@@ -11,7 +11,6 @@
 #include "nsRuleData.h"
 #include "nsStyleConsts.h"
 #include "nsContentUtils.h"
-#include "../../../../yuchen/utils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(IFrame)
 
@@ -52,7 +51,11 @@ HTMLIFrameElement::GetSrc(JSContext *cx, nsAString& aValue)
 
 void HTMLIFrameElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult& aError)
 {
-	if (cx != NULL) yuchen::record("access.txt", "Iframe src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aSrc)));
+	if (cx != NULL) {
+		if (this->OwnerDoc() != NULL){
+			this->OwnerDoc()->recordAccess("Iframe src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aSrc)));
+		}
+	}
 	SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
 }
 

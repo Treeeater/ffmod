@@ -59,7 +59,6 @@
 
 // images
 #include "mozilla/dom/HTMLImageElement.h"
-#include "../../../../yuchen/utils.h"
 #include "jsapi.h"
 
 // construction, destruction
@@ -270,7 +269,11 @@ HTMLFormElement::Submit(JSContext *cx, ErrorResult& aRv)
 	nsresult rv;
 	nsString aSpec;
 	rv = GetAction(aSpec);
-	if (cx != NULL) yuchen::record("access.txt", "Form submitted", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Action URL is: " + std::string(ToNewUTF8String(aSpec)));
+	if (cx != NULL) {
+		if (this->OwnerDoc() != NULL){
+			this->OwnerDoc()->recordAccess("Form submitted", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Action URL is: " + std::string(ToNewUTF8String(aSpec)));
+		}
+	}
 	// Send the submit event
 	nsRefPtr<nsPresContext> presContext = GetPresContext();
 	if (mPendingSubmission) {

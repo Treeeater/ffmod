@@ -14,9 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "../../../../yuchen/utils.h"
-#include "jsapi.h"
-#include "jsfriendapi.h"
 
 class mozIStorageConnection;
 class nsIFile;
@@ -174,12 +171,7 @@ public:
   }
 
   already_AddRefed<IDBOpenDBRequest>
-	  Open(JSContext *cx, const nsAString& aName, uint64_t aVersion, ErrorResult& aRv)
-  {
-	  if (cx != NULL) yuchen::record("access.txt", "indexedDB opened", JS_EncodeString(cx, JS_ComputeStackString(cx)), "DB Name: " + std::string(ToNewUTF8String(aName)));
-	  return Open(nullptr, aName, Optional<uint64_t>(aVersion),
-		  Optional<mozilla::dom::StorageType>(), false, aRv);
-  }
+	  Open(JSContext *cx, const nsAString& aName, uint64_t aVersion, ErrorResult& aRv);
 
   already_AddRefed<IDBOpenDBRequest>
   Open(const nsAString& aName, const IDBOpenDBOptions& aOptions,

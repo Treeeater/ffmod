@@ -26,7 +26,6 @@
 #include "nsWrapperCacheInlines.h"
 #include "js/HashTable.h"
 #include "mozilla/HashFunctions.h"
-#include "../../../../yuchen/utils.h"
 
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
@@ -1434,7 +1433,7 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
 static bool
 CallNPMethod(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  if (cx != NULL) yuchen::record("access.txt", "NPAPI method called!", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+  //if (cx != NULL) yuchen::recordAccess("NPAPI method called!", JS_EncodeString(cx, JS_ComputeStackString(cx)), "", cx);
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JS::Rooted<JSObject*> obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)

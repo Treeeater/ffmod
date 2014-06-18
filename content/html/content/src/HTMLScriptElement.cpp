@@ -22,7 +22,6 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/HTMLScriptElement.h"
 #include "mozilla/dom/HTMLScriptElementBinding.h"
-#include "../../../../yuchen/utils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
 
@@ -175,7 +174,11 @@ HTMLScriptElement::SetSrc(const nsAString& aSrc, ErrorResult& rv)
 void
 HTMLScriptElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult& rv)
 {
-	if (cx != NULL) yuchen::record("access.txt", "Script src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aSrc)));
+	if (cx != NULL) {
+		if (this->OwnerDoc() != NULL){
+			this->OwnerDoc()->recordAccess("Script src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aSrc)));
+		}
+	}
 	rv = SetAttrHelper(nsGkAtoms::src, aSrc);
 }
 

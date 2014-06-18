@@ -77,7 +77,6 @@
 #include "nsZipArchive.h"
 #include "mozilla/Preferences.h"
 #include "private/pprio.h"
-#include "D:/mozilla-source/mozilla-central/yuchen/utils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2656,7 +2655,11 @@ nsXMLHttpRequest::Send(JSContext *cx, nsIVariant* aVariant, const Nullable<Reque
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (cx != NULL) yuchen::record("access.txt", "XMLHttpRequest sent", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Sent to: "+myc_url);
+  if (cx != NULL) {
+	  if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
+		  this->GetOwner()->GetDoc()->recordAccess("XMLHttpRequest sent", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Sent to: " + myc_url);
+	  }
+  }
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
   // in turn keeps STOP button from becoming active.  If the consumer passed in
   // a progress event handler we must load with nsIRequest::LOAD_NORMAL or

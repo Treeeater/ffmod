@@ -20,9 +20,10 @@
 #include "nsIWeakReference.h"
 #include "mozilla/Services.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "../../yuchen/utils.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include <string>
+#include "nsIDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -386,28 +387,44 @@ void
 nsPluginElement::GetDescription(JSContext *cx, nsString& retval) const
 {
 	GetDescription(retval);
-	if (cx != NULL) yuchen::record("access.txt", "navigator.plugins[].description read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Description: " + std::string(ToNewUTF8String(retval)));
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].description read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Description: " + std::string(ToNewUTF8String(retval)));
+		}
+	}
 }
 
 void
 nsPluginElement::GetFilename(JSContext *cx, nsString& retval) const
 {
 	GetFilename(retval);
-	if (cx != NULL) yuchen::record("access.txt", "navigator.plugins[].fileName read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "FileName: " + std::string(ToNewUTF8String(retval)));
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].fileName read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "FileName: " + std::string(ToNewUTF8String(retval)));
+		}
+	}
 }
 
 void
 nsPluginElement::GetVersion(JSContext *cx, nsString& retval) const
 {
 	GetVersion(retval);
-	if (cx != NULL) yuchen::record("access.txt", "navigator.plugins[].version read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Version: " + std::string(ToNewUTF8String(retval)));
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].version read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Version: " + std::string(ToNewUTF8String(retval)));
+		}
+	}
 }
 
 void
 nsPluginElement::GetName(JSContext *cx, nsString& retval) const
 {
 	GetName(retval);
-	if (cx != NULL) yuchen::record("access.txt", "navigator.plugins[].name read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Name: " + std::string(ToNewUTF8String(retval)));
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].name read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Name: " + std::string(ToNewUTF8String(retval)));
+		}
+	}
 }
 
 void
@@ -486,7 +503,11 @@ nsPluginElement::NameIsEnumerable(const nsAString& aName)
 uint32_t
 nsPluginElement::Length(JSContext *cx)
 {
-	if (cx != NULL) yuchen::record("access.txt", "navigator.plugins[].length read", JS_EncodeString(cx, JS_ComputeStackString(cx)),"");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].length read", JS_EncodeString(cx, JS_ComputeStackString(cx)),"");
+		}
+	}
 	return Length();
 }
 

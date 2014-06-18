@@ -29,7 +29,6 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 #include "nsUnicharUtils.h"
-#include "../../../../yuchen/utils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Link)
 
@@ -121,7 +120,11 @@ NS_IMETHODIMP HTMLLinkElement::GetHref(JSContext *cx, nsAString& aValue)
 }
 
 void HTMLLinkElement::SetHref(JSContext *cx, const nsAString& aHref, ErrorResult& aRv){
-	if (cx != NULL) yuchen::record("access.txt", "Link href set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aHref)));
+	if (cx != NULL) {
+		if (this->OwnerDoc() != NULL){
+			this->OwnerDoc()->recordAccess("Link href set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aHref)));
+		}
+	}
 	SetHTMLAttr(nsGkAtoms::href, aHref, aRv);
 }
 

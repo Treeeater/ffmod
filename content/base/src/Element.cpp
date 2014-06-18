@@ -135,7 +135,6 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "../../../yuchen/utils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -728,7 +727,7 @@ Element::GetBoundingClientRect()
 already_AddRefed<DOMRect>
 Element::GetBoundingClientRect(JSContext *cx)
 {
-	//if (cx != NULL) yuchen::record("access.txt", "getBoundingClientRect accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	//if (cx != NULL) yuchen::recordAccess("getBoundingClientRect accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "", cx);
 	return GetBoundingClientRect();
 }
 

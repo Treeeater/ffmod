@@ -109,7 +109,6 @@
 #include "nsCharsetSource.h"
 #include "nsIStringBundle.h"
 #include "nsDOMClassInfo.h"
-#include "D:/mozilla-source/mozilla-central/yuchen/utils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1262,7 +1261,9 @@ nsHTMLDocument::GetCookie(JSContext *cx, nsAString& aCookie, ErrorResult& rv)
     }
 
 	nsXPIDLCString cookie;
-	if (cx!=NULL) yuchen::record("access.txt", "GetCookie", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx!=NULL){
+			this->recordAccess("GetCookie", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	}
     service->GetCookieString(codebaseURI, mChannel, getter_Copies(cookie));
     // CopyUTF8toUTF16 doesn't handle error
     // because it assumes that the input is valid.
@@ -1308,7 +1309,9 @@ nsHTMLDocument::SetCookie(JSContext *cx, const nsAString& aCookie, ErrorResult& 
 		}
 
 		NS_ConvertUTF16toUTF8 cookie(aCookie);
-		if (cx!=NULL) yuchen::record("access.txt", "SetCookie", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		if (cx!=NULL){
+			this->recordAccess("SetCookie", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
 		service->SetCookieString(codebaseURI, nullptr, cookie.get(), mChannel);
 	}
 }

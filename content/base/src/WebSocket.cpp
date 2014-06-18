@@ -43,7 +43,6 @@
 #include "nsIObserverService.h"
 #include "nsIWebSocketChannel.h"
 #include "GeneratedEvents.h"
-#include "../../../../yuchen/utils.h"
 #include "jsfriendapi.h"
 #include "jsapi.h"
 
@@ -499,7 +498,7 @@ const nsAString& aUrl,
 ErrorResult& aRv)
 {
 	Sequence<nsString> protocols;
-	if (cx != NULL) yuchen::record("access.txt", "WebSocket opened", JS_EncodeString(cx, JS_ComputeStackString(cx)), "socket URI: " + std::string(ToNewUTF8String(aUrl)));
+	//if (cx != NULL) yuchen::recordAccess("WebSocket opened", JS_EncodeString(cx, JS_ComputeStackString(cx)), "socket URI: " + std::string(ToNewUTF8String(aUrl)), cx);
 	return WebSocket::Constructor(aGlobal, aUrl, protocols, aRv);
 }
 

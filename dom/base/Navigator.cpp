@@ -64,7 +64,6 @@
 #include "WidgetUtils.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsChannelPolicy.h"
-#include "../../yuchen/utils.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
@@ -337,7 +336,11 @@ Navigator::GetUserAgent(nsAString& aUserAgent)
 
 NS_IMETHODIMP
 Navigator::GetUserAgent(JSContext *cx, nsAString& aUserAgent){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.userAgent accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.userAgent accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return GetUserAgent(aUserAgent);
 }
 
@@ -359,7 +362,11 @@ Navigator::GetAppCodeName(nsAString& aAppCodeName)
 
 NS_IMETHODIMP
 Navigator::GetAppCodeName(JSContext *cx, nsAString& aAppCodeName){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.appCodeName accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.appCodeName accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return GetAppCodeName(aAppCodeName);
 }
 
@@ -371,7 +378,11 @@ Navigator::GetAppVersion(nsAString& aAppVersion)
 
 NS_IMETHODIMP
 Navigator::GetAppVersion(JSContext *cx, nsAString& aAppVersion){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.appVersion accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.appVersion accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return GetAppVersion(aAppVersion);
 }
 
@@ -458,7 +469,11 @@ Navigator::GetLanguage(nsAString& aLanguage)
 
 NS_IMETHODIMP
 Navigator::GetLanguage(JSContext *cx, nsAString& aLanguage){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.language accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.language accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return GetLanguage(aLanguage);
 }
 
@@ -514,7 +529,11 @@ Navigator::GetVendor(nsAString& aVendor)
 
 NS_IMETHODIMP
 Navigator::GetVendor(JSContext *cx, nsAString& aVendor){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.vendor accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.vendor accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return GetVendor(aVendor);
 }
 
@@ -527,7 +546,11 @@ Navigator::GetVendorSub(nsAString& aVendorSub)
 
 NS_IMETHODIMP
 Navigator::GetVendorSub(JSContext *cx, nsAString& aVendorSub){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.vendorSub accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.vendorSub accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return GetVendorSub(aVendorSub);
 }
 
@@ -540,7 +563,11 @@ Navigator::GetProduct(nsAString& aProduct)
 
 NS_IMETHODIMP
 Navigator::GetProduct(JSContext *cx, nsAString& aProduct){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.product accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.product accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return GetProduct(aProduct);
 }
 
@@ -554,7 +581,11 @@ Navigator::GetProductSub(nsAString& aProductSub)
 
 NS_IMETHODIMP
 Navigator::GetProductSub(JSContext *cx, nsAString& aProductSub){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.productSub accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.productSub accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return GetProductSub(aProductSub);
 }
 
@@ -637,7 +668,11 @@ Navigator::CookieEnabled()
 
 bool
 Navigator::CookieEnabled(JSContext *cx){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.cookieEnabled accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.cookieEnabled accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return CookieEnabled();
 }
 
@@ -649,7 +684,11 @@ Navigator::OnLine()
 
 bool
 Navigator::OnLine(JSContext *cx){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.onLine accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.onLine accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return OnLine();
 }
 
@@ -725,7 +764,11 @@ Navigator::JavaEnabled(ErrorResult& aRv)
 
 bool
 Navigator::JavaEnabled(JSContext *cx, ErrorResult& aRv){
-	if (cx != NULL) yuchen::record("access.txt", "Navigator.javaEnabled accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.javaEnabled accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return JavaEnabled(aRv);
 }
 

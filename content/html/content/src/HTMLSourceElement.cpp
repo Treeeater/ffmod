@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/HTMLSourceElement.h"
 #include "mozilla/dom/HTMLSourceElementBinding.h"
-#include "../../../../yuchen/utils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Source)
 
@@ -29,7 +28,11 @@ NS_IMPL_ELEMENT_CLONE(HTMLSourceElement)
 
 void HTMLSourceElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult& aError)
 {
-	if (cx != NULL) yuchen::record("access.txt", "Source src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aSrc)));
+	if (cx != NULL) {
+		if (this->OwnerDoc() != NULL){
+			this->OwnerDoc()->recordAccess("Source src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aSrc)));
+		}
+	}
 	SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
 }
 

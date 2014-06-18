@@ -259,8 +259,6 @@ static PRLogModuleInfo* gDOMLeakPRLog;
 #include <unistd.h> // for getpid()
 #endif
 
-#include "../../yuchen/utils.h"
-
 static const char kStorageEnabled[] = "dom.storage.enabled";
 
 using namespace mozilla;
@@ -2537,7 +2535,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
 
     mInnerWindow = newInnerWindow;
-
     if (!GetWrapperPreserveColor()) {
       JS::Rooted<JSObject*> outer(cx,
         NewOuterWindowProxy(cx, newInnerGlobal, thisChrome));
@@ -2732,7 +2729,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   }
 
   PreloadLocalStorage();
-
   return NS_OK;
 }
 
@@ -10439,7 +10435,11 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
 
 nsIDOMStorage*
 nsGlobalWindow::GetLocalStorage(JSContext *cx, ErrorResult& aError){
-	if (cx != NULL) yuchen::record("access.txt", "localStorage accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+	if (cx != NULL) {
+		if (this->GetDoc() != NULL) {
+			this->GetDoc()->recordAccess("localStorage accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		}
+	}
 	return GetLocalStorage(aError);
 }
 

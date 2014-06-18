@@ -20,7 +20,6 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
-#include "../../../../yuchen/utils.h"
 #include "../../../../js/src/jsfriendapi.h"
 #include "../../../../js/src/jsapi.h"
 
@@ -467,7 +466,11 @@ HTMLObjectElement::WrapNode(JSContext* aCx)
 void
 HTMLObjectElement::SetData(JSContext *cx, const nsAString& aValue, ErrorResult& aRv)
 {
-	if (cx != NULL) yuchen::record("access.txt", "Object data set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "data set to: " + std::string(ToNewUTF8String(aValue)));
+	if (cx != NULL) {
+		if (this->OwnerDoc() != NULL){
+			this->OwnerDoc()->recordAccess("Object data set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "data set to: " + std::string(ToNewUTF8String(aValue)));
+		}
+	}
 	SetHTMLAttr(nsGkAtoms::data, aValue, aRv);
 }
 
