@@ -8,6 +8,8 @@
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
 #include "mozilla/dom/HTMLDivElementBinding.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
 
@@ -26,6 +28,11 @@ NS_IMPL_ELEMENT_CLONE(HTMLDivElement)
 JSObject*
 HTMLDivElement::WrapNode(JSContext *aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			this->OwnerDoc()->recordAccess("wrap DIV", JS_EncodeString(aCx, JS_ComputeStackString(aCx)), "");
+		}
+	}
   return dom::HTMLDivElementBinding::Wrap(aCx, this);
 }
 

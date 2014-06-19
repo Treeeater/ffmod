@@ -3721,6 +3721,7 @@ PLDHashOperator RequestDiscardEnumerator(imgIRequest* aKey,
 void
 nsDocument::DeleteShell()
 {
+	this->outputAccessToFile();
   mExternalResourceMap.HideViewers();
   if (IsEventHandlingEnabled()) {
     RevokeAnimationFrameNotifications();
@@ -8838,6 +8839,7 @@ void
 nsDocument::OnPageHide(bool aPersisted,
                        EventTarget* aDispatchStartTarget)
 {
+  this->outputAccessToFile();
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
   Element* root = GetRootElement();

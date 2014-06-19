@@ -2661,6 +2661,8 @@ public:
 	};
 
 	std::map<std::string, records> mRecords;
+	
+	bool outputed = false;
 
 	void recordAccess(std::string resource, std::string stack, std::string additional){
 		nsString s;
@@ -2709,6 +2711,9 @@ public:
 	}
 
 	void outputAccessToFile(){
+		if (outputed) return;
+		if (mRecords.empty()) return;			//this is used to prevent newly created document to call resetToURI which sets outputed to true.  This also happens to be a optimization.
+		outputed = true;
 		nsString ss;
 		this->GetURL(ss);
 		std::string hostURI(ToNewUTF8String(ss));
