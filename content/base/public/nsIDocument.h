@@ -2664,12 +2664,32 @@ public:
 	
 	bool outputed = false;
 
+	std::string getDomain(std::string url){
+		std::string domain = "";
+		if (url.substr(0, 7) == "http://") {
+			domain = url.substr(7);
+		}
+		else if (url.substr(0, 8) == "https://"){
+			domain = url.substr(8);
+		}
+		else return domain;		//ignore non http/https protocols.
+		domain = domain.substr(0, domain.find("/"));
+		unsigned rfound = domain.rfind('.');
+		if (rfound == std::string::npos) return domain;
+		std::string d = domain.substr(0, rfound);
+		rfound = d.rfind('.');
+		if (rfound == std::string::npos) return domain;
+		return domain.substr(rfound + 1);
+	}
+
 	void recordAccess(std::string resource, std::string stack, std::string additional){
 		nsString s;
 		this->GetURL(s);
 		std::string hostURI(ToNewCString(s));
 		std::istringstream iss(stack);
 		std::vector<std::string> tokens{ std::istream_iterator < std::string > {iss}, std::istream_iterator < std::string > {} };
+		if (tokens.size() == 0) return;
+		std::string hostDomain = getDomain(hostURI);
 		std::string processedStack = "";
 		std::vector<std::string> domains;
 		std::string domain = "";
@@ -2677,15 +2697,9 @@ public:
 			unsigned at = curCxt.find("@");
 			if (at == std::string::npos) continue;		//ignore contexts w/o @ sign
 			curCxt = curCxt.substr(at + 1);
-			if (curCxt.substr(0, 7) == "http://") {
-				domain = curCxt.substr(7);
-			}
-			else if (curCxt.substr(0, 8) == "https://"){
-				domain = curCxt.substr(8);
-			}
-			else continue;		//ignore non http/https protocols.
-			domain = domain.substr(0, domain.find("/"));
-			if (find(domains.begin(), domains.end(), domain) == domains.end()){
+			domain = getDomain(curCxt);
+			if (domain == "") continue;
+			if (find(domains.begin(), domains.end(), domain) == domains.end() && domain != hostDomain){
 				domains.push_back(domain);
 				processedStack += (domain + "\n");
 			}
