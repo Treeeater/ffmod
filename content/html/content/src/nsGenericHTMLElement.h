@@ -67,6 +67,8 @@ public:
 
   // From Element
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
+  
+  std::string stackAccessed = "";
 
   void GetTitle(nsString& aTitle)
   {

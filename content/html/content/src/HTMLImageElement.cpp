@@ -42,6 +42,8 @@
 #include "nsLayoutUtils.h"
 
 #include "mozilla/Preferences.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 static const char *kPrefSrcsetEnabled = "dom.image.srcset.enabled";
 
@@ -734,6 +736,11 @@ HTMLImageElement::GetCORSMode()
 JSObject*
 HTMLImageElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			stackAccessed += JS_EncodeString(aCx, JS_ComputeStackString(aCx));
+		}
+	}
   return HTMLImageElementBinding::Wrap(aCx, this);
 }
 
