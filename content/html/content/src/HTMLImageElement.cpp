@@ -738,7 +738,11 @@ HTMLImageElement::WrapNode(JSContext* aCx)
 {
 	if (aCx != NULL){
 		if (this->OwnerDoc() != NULL){
-			stackAccessed += JS_EncodeString(aCx, JS_ComputeStackString(aCx));
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
 		}
 	}
   return HTMLImageElementBinding::Wrap(aCx, this);

@@ -31,6 +31,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <unordered_set>
 
 class imgIRequest;
 class nsAString;
@@ -2691,18 +2692,16 @@ public:
 		if (tokens.size() == 0) return;
 		std::string hostDomain = getDomain(hostURI);
 		std::string processedStack = "";
-		std::vector<std::string> domains;
+		std::unordered_set<std::string> domains;
 		std::string domain = "";
 		for (auto curCxt : tokens){
 			unsigned at = curCxt.find("@");
 			if (at == std::string::npos) continue;		//ignore contexts w/o @ sign
 			curCxt = curCxt.substr(at + 1);
 			domain = getDomain(curCxt);
-			if (domain == "") continue;
-			if (find(domains.begin(), domains.end(), domain) == domains.end() && domain != hostDomain){
-				domains.push_back(domain);
-				processedStack += (domain + "\n");
-			}
+			if (domain == "" || domain == hostDomain) continue;
+			domains.insert(domain);
+			processedStack += (domain + "\n");
 		}
 		if (processedStack == "") return;		//no valid stack information.
 		for (auto domain : domains){

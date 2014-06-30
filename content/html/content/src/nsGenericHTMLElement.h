@@ -18,6 +18,8 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ValidityState.h"
 #include "mozilla/dom/ElementInlines.h"
+#include <unordered_map>
+#include <unordered_set>
 
 class nsDOMSettableTokenList;
 class nsIDOMHTMLMenuElement;
@@ -67,8 +69,12 @@ public:
 
   // From Element
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
-  
-  std::string stackAccessed = "";
+
+  std::unordered_map<std::string, int> stackInfo;
+
+  std::string getDomain(std::string url);
+
+  std::unordered_set<std::string> convStackToSet(std::string stack);
 
   void GetTitle(nsString& aTitle)
   {

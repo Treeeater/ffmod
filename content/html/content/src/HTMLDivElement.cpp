@@ -28,9 +28,19 @@ NS_IMPL_ELEMENT_CLONE(HTMLDivElement)
 JSObject*
 HTMLDivElement::WrapNode(JSContext *aCx)
 {
-	if (aCx != NULL){
+	/*if (aCx != NULL){
 		if (this->OwnerDoc() != NULL){
 			this->OwnerDoc()->recordAccess("wrap DIV", JS_EncodeString(aCx, JS_ComputeStackString(aCx)), "");
+		}
+	}*/
+
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
 		}
 	}
   return dom::HTMLDivElementBinding::Wrap(aCx, this);
