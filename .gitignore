@@ -16,3 +16,4 @@
 !dom/base/*.cpp
 !dom/base/*.h
 !/.gitignore
+!/dom/bindings/codegen.py
