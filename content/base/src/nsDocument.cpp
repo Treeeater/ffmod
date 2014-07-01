@@ -3724,25 +3724,27 @@ void
 nsDocument::collectDOMAccess(nsGenericHTMLElement *root, std::string curXPath, int index){
 	if (outputed || root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
-	std::string thisXPath = ToNewCString(s);
 	std::string xpath = curXPath + "/" + ToNewCString(s) + "[" + std::to_string(index) + "]";
 	std::unordered_map<std::string, int> elements;
-	if (root->stackInfo.size() > 0 && root->stackInfo.size() < 1000) {
-		//this is a workaround to avoid crashing Firefox when stackInfo is somehow uninitialized. We assume there are less than 1000 3p domains each page.
-		//visit this first
-		for (auto st : root->stackInfo){
-			std::string domain = st.first;
-			if (mRecords.find(domain) == mRecords.end()){
-				records recs;
-				records::record rec(xpath, std::to_string(st.second), "");
-				recs.ra_r.insert(std::pair<std::string, records::record>(xpath, rec));
-				mRecords.insert(std::pair<std::string, records>(domain, recs));
-			}
-			else {
-				records::record rec(xpath, std::to_string(st.second), "");
-				mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(xpath, rec));
+	try{
+		if (root->stackInfo.size() > 0) {
+			//visit this first
+			for (auto st : root->stackInfo){
+				std::string domain = st.first;
+				if (mRecords.find(domain) == mRecords.end()){
+					records recs;
+					records::record rec(xpath, std::to_string(st.second), "");
+					recs.ra_r.insert(std::pair<std::string, records::record>(xpath, rec));
+					mRecords.insert(std::pair<std::string, records>(domain, recs));
+				}
+				else {
+					records::record rec(xpath, std::to_string(st.second), "");
+					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(xpath, rec));
+				}
 			}
 		}
+	}
+	catch (...){
 	}
 	//visit all children
 	nsIDOMElement* next = root;

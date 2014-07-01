@@ -37,6 +37,8 @@
 #include "nsStyleConsts.h"
 #include "nsThreadUtils.h"
 #include "nsVideoFrame.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gTrackElementLog;
@@ -119,6 +121,15 @@ HTMLTrackElement::OnChannelRedirect(nsIChannel* aChannel,
 JSObject*
 HTMLTrackElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLTrackElementBinding::Wrap(aCx, this);
 }
 

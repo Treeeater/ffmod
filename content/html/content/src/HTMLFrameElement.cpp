@@ -5,6 +5,8 @@
 
 #include "mozilla/dom/HTMLFrameElement.h"
 #include "mozilla/dom/HTMLFrameElementBinding.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 class nsIDOMDocument;
 
@@ -83,6 +85,15 @@ HTMLFrameElement::ParseAttribute(int32_t aNamespaceID,
 JSObject*
 HTMLFrameElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLFrameElementBinding::Wrap(aCx, this);
 }
 

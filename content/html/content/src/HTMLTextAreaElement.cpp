@@ -40,6 +40,8 @@
 #include "nsStyleConsts.h"
 #include "nsTextEditorState.h"
 #include "nsIController.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
@@ -1529,6 +1531,15 @@ HTMLTextAreaElement::FieldSetDisabledChanged(bool aNotify)
 JSObject*
 HTMLTextAreaElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLTextAreaElementBinding::Wrap(aCx, this);
 }
 

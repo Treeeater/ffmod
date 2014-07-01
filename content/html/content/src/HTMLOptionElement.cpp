@@ -27,6 +27,8 @@
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
 #include "nsTextNode.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 /**
  * Implementation of &lt;option&gt;
@@ -449,6 +451,15 @@ HTMLOptionElement::CopyInnerTo(Element* aDest)
 JSObject*
 HTMLOptionElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLOptionElementBinding::Wrap(aCx, this);
 }
 

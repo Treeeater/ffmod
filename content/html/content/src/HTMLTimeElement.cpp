@@ -8,6 +8,8 @@
 #include "nsGenericHTMLElement.h"
 #include "nsVariant.h"
 #include "nsGkAtoms.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Time)
 
@@ -28,6 +30,15 @@ NS_IMPL_ELEMENT_CLONE(HTMLTimeElement)
 JSObject*
 HTMLTimeElement::WrapNode(JSContext* cx)
 {
+	if (cx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLTimeElementBinding::Wrap(cx, this);
 }
 

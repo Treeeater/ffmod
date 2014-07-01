@@ -10,6 +10,8 @@
 #include "nsStyleConsts.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Title)
@@ -35,6 +37,15 @@ NS_IMPL_ELEMENT_CLONE(HTMLTitleElement)
 JSObject*
 HTMLTitleElement::WrapNode(JSContext* cx)
 {
+	if (cx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLTitleElementBinding::Wrap(cx, this);
 }
 

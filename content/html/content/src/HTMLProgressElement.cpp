@@ -6,6 +6,8 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/HTMLProgressElement.h"
 #include "mozilla/dom/HTMLProgressElementBinding.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Progress)
 
@@ -101,6 +103,15 @@ HTMLProgressElement::IsIndeterminate() const
 JSObject*
 HTMLProgressElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLProgressElementBinding::Wrap(aCx, this);
 }
 

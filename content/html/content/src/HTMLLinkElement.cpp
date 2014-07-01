@@ -29,6 +29,8 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 #include "nsUnicharUtils.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Link)
 
@@ -535,6 +537,15 @@ HTMLLinkElement::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 JSObject*
 HTMLLinkElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLLinkElementBinding::Wrap(aCx, this);
 }
 

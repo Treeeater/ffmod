@@ -34,6 +34,8 @@
 #include "nsFocusManager.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozAutoDocUpdate.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 #define NS_IN_SUBMIT_CLICK      (1 << 0)
 #define NS_OUTER_ACTIVATE_EVENT (1 << 1)
@@ -581,6 +583,15 @@ HTMLButtonElement::IntrinsicState() const
 JSObject*
 HTMLButtonElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLButtonElementBinding::Wrap(aCx, this);
 }
 

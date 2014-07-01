@@ -17,6 +17,8 @@
 #include "nsIScriptError.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
 
@@ -355,6 +357,15 @@ HTMLSharedObjectElement::WrapNode(JSContext* aCx)
   if (!obj) {
     return nullptr;
   }
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   JS::Rooted<JSObject*> rootedObj(aCx, obj);
   SetupProtoChain(aCx, rootedObj);
   return rootedObj;

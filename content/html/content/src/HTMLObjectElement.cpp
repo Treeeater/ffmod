@@ -20,8 +20,8 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
-#include "../../../../js/src/jsfriendapi.h"
-#include "../../../../js/src/jsapi.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 namespace mozilla {
 namespace dom {
@@ -454,6 +454,15 @@ HTMLObjectElement::CopyInnerTo(Element* aDest)
 JSObject*
 HTMLObjectElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   JS::Rooted<JSObject*> obj(aCx,
     HTMLObjectElementBinding::Wrap(aCx, this));
   if (!obj) {

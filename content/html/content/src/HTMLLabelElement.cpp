@@ -12,6 +12,8 @@
 #include "mozilla/dom/HTMLLabelElementBinding.h"
 #include "nsFocusManager.h"
 #include "nsIDOMMouseEvent.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 // construction, destruction
 
@@ -27,6 +29,15 @@ HTMLLabelElement::~HTMLLabelElement()
 JSObject*
 HTMLLabelElement::WrapNode(JSContext *aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLLabelElementBinding::Wrap(aCx, this);
 }
 

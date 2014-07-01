@@ -60,6 +60,7 @@
 // images
 #include "mozilla/dom/HTMLImageElement.h"
 #include "jsapi.h"
+#include "jsfriendapi.h"
 
 // construction, destruction
 nsGenericHTMLElement*
@@ -2403,6 +2404,15 @@ HTMLFormElement::AddToPastNamesMap(const nsAString& aName,
 JSObject*
 HTMLFormElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLFormElementBinding::Wrap(aCx, this);
 }
 

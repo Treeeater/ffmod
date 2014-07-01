@@ -34,6 +34,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStyleConsts.h"
 #include "nsTextNode.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Select)
 
@@ -1910,6 +1912,15 @@ HTMLSelectElement::UpdateSelectedOptions()
 JSObject*
 HTMLSelectElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLSelectElementBinding::Wrap(aCx, this);
 }
 

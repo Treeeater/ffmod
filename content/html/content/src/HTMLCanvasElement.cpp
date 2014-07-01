@@ -36,6 +36,8 @@
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "ActiveLayerTracker.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 #ifdef MOZ_WEBGL
 #include "../canvas/src/WebGL2Context.h"
@@ -143,6 +145,15 @@ NS_IMPL_ELEMENT_CLONE(HTMLCanvasElement)
 /* virtual */ JSObject*
 HTMLCanvasElement::WrapNode(JSContext* aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLCanvasElementBinding::Wrap(aCx, this);
 }
 

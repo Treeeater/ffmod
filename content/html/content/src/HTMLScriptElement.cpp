@@ -22,6 +22,8 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/HTMLScriptElement.h"
 #include "mozilla/dom/HTMLScriptElementBinding.h"
+#include "jsfriendapi.h"
+#include "jsapi.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
 
@@ -31,6 +33,15 @@ namespace dom {
 JSObject*
 HTMLScriptElement::WrapNode(JSContext *aCx)
 {
+	if (aCx != NULL){
+		if (this->OwnerDoc() != NULL){
+			std::unordered_set<std::string> stacks = convStackToSet(JS_EncodeString(aCx, JS_ComputeStackString(aCx)));
+			for (auto s : stacks){
+				if (stackInfo.find(s) == stackInfo.end()) stackInfo[s] = 0;
+				stackInfo[s]++;
+			}
+		}
+	}
   return HTMLScriptElementBinding::Wrap(aCx, this);
 }
 
