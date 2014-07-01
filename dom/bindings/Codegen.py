@@ -1114,7 +1114,7 @@ class CGHeaders(CGWrapper):
 
         # Let the machinery do its thing.
         def _includeString(includes):
-            return ''.join(['#include "%s"\n' % i for i in includes]) + '\n'
+			return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n\n'
         CGWrapper.__init__(self, child,
                            declarePre=_includeString(sorted(declareIncludes)),
                            definePre=_includeString(sorted(set(defineIncludes) |
@@ -6941,7 +6941,19 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     def definition_body(self):
         nativeName = CGSpecializedMethod.makeNativeName(self.descriptor,
                                                         self.method)
-        return CGMethodCall(nativeName, self.method.isStatic(), self.descriptor,
+        prefix = ""
+        if self.descriptor.record:
+            prefix = prefix + """if (cx != NULL){
+  if (self->OwnerDoc() != NULL){
+    std::unordered_set<std::string> stacks = self->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+    for (auto s : stacks){
+      if (self->stackInfo.find(s) == self->stackInfo.end()) self->stackInfo[s] = 0;
+      self->stackInfo[s]++;
+    }
+  }
+}
+"""
+        return prefix + CGMethodCall(nativeName, self.method.isStatic(), self.descriptor,
                             self.method).define()
 
     @staticmethod
@@ -7279,7 +7291,17 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
         else:
             prefix = ""
-
+        if self.descriptor.record:
+            prefix = prefix + """if (cx != NULL){
+  if (self->OwnerDoc() != NULL){
+    std::unordered_set<std::string> stacks = self->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+    for (auto s : stacks){
+      if (self->stackInfo.find(s) == self->stackInfo.end()) self->stackInfo[s] = 0;
+      self->stackInfo[s]++;
+    }
+  }
+}
+"""
         return (prefix +
                 CGGetterCall(self.attr.type, nativeName,
                              self.descriptor, self.attr).define())
@@ -7380,11 +7402,22 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('JSJitSetterCallArgs', 'args')]
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
-
     def definition_body(self):
         nativeName = CGSpecializedSetter.makeNativeName(self.descriptor,
                                                         self.attr)
-        return CGSetterCall(self.attr.type, nativeName, self.descriptor,
+        prefix = ""
+        if self.descriptor.record:
+            prefix = """if (cx != NULL){
+  if (self->OwnerDoc() != NULL){
+    std::unordered_set<std::string> stacks = self->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+    for (auto s : stacks){
+      if (self->stackInfo.find(s) == self->stackInfo.end()) self->stackInfo[s] = 0;
+      self->stackInfo[s]++;
+    }
+  }
+}
+"""
+        return prefix + CGSetterCall(self.attr.type, nativeName, self.descriptor,
                             self.attr).define()
 
     @staticmethod
@@ -10361,9 +10394,9 @@ class CGDescriptor(CGThing):
 
                     """,
                     nativeType=descriptor.nativeType)))
-                if not descriptor.wrapperCache:
-                    raise TypeError("We need a wrappercache to support expandos for proxy-based "
-                                    "bindings (" + descriptor.name + ")")
+                #if not descriptor.wrapperCache:
+                    #raise TypeError("We need a wrappercache to support expandos for proxy-based "
+                                    #"bindings (" + descriptor.name + ")")
                 handlerThing = CGDOMJSProxyHandler(descriptor)
                 cgThings.append(CGDOMJSProxyHandlerDeclarer(handlerThing))
                 cgThings.append(CGProxyIsProxy(descriptor))
