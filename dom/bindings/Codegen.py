@@ -10361,9 +10361,9 @@ class CGDescriptor(CGThing):
 
                     """,
                     nativeType=descriptor.nativeType)))
-                if not descriptor.wrapperCache:
-                    raise TypeError("We need a wrappercache to support expandos for proxy-based "
-                                    "bindings (" + descriptor.name + ")")
+                #if not descriptor.wrapperCache:
+                    #raise TypeError("We need a wrappercache to support expandos for proxy-based "
+                                    #"bindings (" + descriptor.name + ")")
                 handlerThing = CGDOMJSProxyHandler(descriptor)
                 cgThings.append(CGDOMJSProxyHandlerDeclarer(handlerThing))
                 cgThings.append(CGProxyIsProxy(descriptor))
