@@ -6943,7 +6943,23 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
                                                         self.method)
         prefix = ""
         if self.descriptor.record:
-            prefix = prefix + """if (cx != NULL){
+            if self.descriptor.nativeType == "mozilla::dom::Element":
+                prefix = prefix + """try{
+  nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
+  if (cx != NULL){
+    if (temp->OwnerDoc() != NULL){
+      std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+      for (auto s : stacks){
+        if (temp->stackInfo.find(s) == temp->stackInfo.end()) temp->stackInfo[s] = 0;
+        temp->stackInfo[s]++;
+      }
+    }
+  }
+}
+catch(...){}		//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+"""
+            else:
+                prefix = prefix + """if (cx != NULL){
   if (self->OwnerDoc() != NULL){
     std::unordered_set<std::string> stacks = self->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
     for (auto s : stacks){
@@ -7292,7 +7308,23 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         else:
             prefix = ""
         if self.descriptor.record:
-            prefix = prefix + """if (cx != NULL){
+            if self.descriptor.nativeType == "mozilla::dom::Element":
+                prefix = prefix + """try{
+  nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
+  if (cx != NULL){
+    if (temp->OwnerDoc() != NULL){
+      std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+      for (auto s : stacks){
+        if (temp->stackInfo.find(s) == temp->stackInfo.end()) temp->stackInfo[s] = 0;
+        temp->stackInfo[s]++;
+      }
+    }
+  }
+}
+catch(...){}		//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+"""
+            else:
+                prefix = prefix + """if (cx != NULL){
   if (self->OwnerDoc() != NULL){
     std::unordered_set<std::string> stacks = self->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
     for (auto s : stacks){
@@ -7407,7 +7439,23 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
                                                         self.attr)
         prefix = ""
         if self.descriptor.record:
-            prefix = """if (cx != NULL){
+            if self.descriptor.nativeType == "mozilla::dom::Element":
+                prefix = prefix + """try{
+  nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
+  if (cx != NULL){
+    if (temp->OwnerDoc() != NULL){
+      std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+      for (auto s : stacks){
+        if (temp->stackInfo.find(s) == temp->stackInfo.end()) temp->stackInfo[s] = 0;
+        temp->stackInfo[s]++;
+      }
+    }
+  }
+}
+catch(...){}		//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+"""
+            else:
+                prefix = prefix + """if (cx != NULL){
   if (self->OwnerDoc() != NULL){
     std::unordered_set<std::string> stacks = self->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
     for (auto s : stacks){
