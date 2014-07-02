@@ -1114,7 +1114,10 @@ class CGHeaders(CGWrapper):
 
         # Let the machinery do its thing.
         def _includeString(includes):
-			return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n\n'
+            for number in descriptors:
+                if number.nativeType == "nsINode":
+                    return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n#include "nsGenericHTMLElement.h"\n'
+            return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n\n'
         CGWrapper.__init__(self, child,
                            declarePre=_includeString(sorted(declareIncludes)),
                            definePre=_includeString(sorted(set(defineIncludes) |
@@ -6943,7 +6946,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
                                                         self.method)
         prefix = ""
         if self.descriptor.record:
-            if self.descriptor.nativeType == "mozilla::dom::Element":
+            if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
                 prefix = prefix + fill("""try{
   std::string name = ToNewCString(self->NodeName());
   if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR")
@@ -7311,7 +7314,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         else:
             prefix = ""
         if self.descriptor.record:
-            if self.descriptor.nativeType == "mozilla::dom::Element":
+            if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
                 prefix = prefix + fill("""try{
   std::string name = ToNewCString(self->NodeName());
   if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR")
@@ -7445,7 +7448,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
                                                         self.attr)
         prefix = ""
         if self.descriptor.record:
-            if self.descriptor.nativeType == "mozilla::dom::Element":
+            if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
                 prefix = prefix + fill("""try{
   std::string name = ToNewCString(self->NodeName());
   if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR")
@@ -11493,7 +11496,6 @@ class CGBindingRoot(CGThing):
         ]
         if jsImplemented:
             declareIncludes.append('nsWeakReference.h')
-
         curr = CGHeaders(descriptors,
                          dictionaries,
                          mainCallbacks + workerCallbacks,
