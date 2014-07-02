@@ -3734,12 +3734,12 @@ nsDocument::collectDOMAccess(nsGenericHTMLElement *root, std::string curXPath, i
 				std::string domain = st.first;
 				if (mRecords.find(domain) == mRecords.end()){
 					records recs;
-					records::record rec(xpath, std::to_string(st.second), "");
+					records::record rec(xpath, st.second, "");
 					recs.ra_r.insert(std::pair<std::string, records::record>(xpath, rec));
 					mRecords.insert(std::pair<std::string, records>(domain, recs));
 				}
 				else {
-					records::record rec(xpath, std::to_string(st.second), "");
+					records::record rec(xpath, st.second, "");
 					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(xpath, rec));
 				}
 			}

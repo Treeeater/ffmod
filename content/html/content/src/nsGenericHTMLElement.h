@@ -70,7 +70,7 @@ public:
   // From Element
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
-  std::unordered_map<std::string, int> stackInfo;
+  std::multimap<std::string, std::string> stackInfo;
 
   std::string getDomain(std::string url);
 
