@@ -224,6 +224,7 @@
 #include "nsContentPermissionHelper.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "nsWindowMemoryReporter.h"
+#include <unordered_map>
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3721,7 +3722,7 @@ PLDHashOperator RequestDiscardEnumerator(imgIRequest* aKey,
 
 
 void
-nsDocument::collectDOMAccess(nsGenericHTMLElement *root, std::string curXPath, int index){
+nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, int index){
 	if (outputed || root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	std::string xpath = curXPath + "/" + ToNewCString(s) + "[" + std::to_string(index) + "]";
@@ -3748,15 +3749,15 @@ nsDocument::collectDOMAccess(nsGenericHTMLElement *root, std::string curXPath, i
 	catch (...){
 	}
 	//visit all children
-	nsIDOMElement* next = root;
-	root->GetFirstElementChild(&next);
+	nsIContent* next = root;
+	next = next->GetFirstChild();
 	std::string nextNodeName;
 	while (next != nullptr && next != NULL){
-		nextNodeName = ToNewCString(((nsGenericHTMLElement *)next)->NodeName());
+		nextNodeName = ToNewCString(next->NodeName());
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		collectDOMAccess((nsGenericHTMLElement *)next, xpath, elements[nextNodeName]);
-		next->GetNextElementSibling(&next);
+		collectDOMAccess(next, xpath, elements[nextNodeName]);
+		next = next->GetNextSibling();
 	}
 }
 

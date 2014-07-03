@@ -1116,7 +1116,7 @@ class CGHeaders(CGWrapper):
         def _includeString(includes):
             for number in descriptors:
                 if number.nativeType == "nsINode":
-                    return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n#include "nsGenericHTMLElement.h"\n'
+                    return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n#include "nsGenericHTMLElement.h"\n#include "\\mozilla-source\\mozilla-central\\content\\base\\src\\nsTextNode.h"\n\n'
             return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n\n'
         CGWrapper.__init__(self, child,
                            declarePre=_includeString(sorted(declareIncludes)),
@@ -6961,6 +6961,17 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
       }
     }
   }
+  if (name == "#text"){
+    nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
+    if (cx != NULL){
+      if (temp->OwnerDoc() != NULL){
+        std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+        for (auto s : stacks){
+          temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+        }
+      }
+    }
+  }
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
@@ -7329,6 +7340,17 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
       }
     }
   }
+  if (name == "#text"){
+    nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
+    if (cx != NULL){
+      if (temp->OwnerDoc() != NULL){
+        std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+        for (auto s : stacks){
+          temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+        }
+      }
+    }
+  }
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
@@ -7454,6 +7476,17 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
   if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR")
   {
     nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
+    if (cx != NULL){
+      if (temp->OwnerDoc() != NULL){
+        std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
+        for (auto s : stacks){
+          temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+        }
+      }
+    }
+  }
+  if (name == "#text"){
+    nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
     if (cx != NULL){
       if (temp->OwnerDoc() != NULL){
         std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));

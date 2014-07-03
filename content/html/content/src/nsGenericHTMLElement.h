@@ -18,7 +18,6 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ValidityState.h"
 #include "mozilla/dom/ElementInlines.h"
-#include <unordered_map>
 #include <unordered_set>
 
 class nsDOMSettableTokenList;
@@ -69,8 +68,6 @@ public:
 
   // From Element
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
-
-  std::multimap<std::string, std::string> stackInfo;
 
   std::string getDomain(std::string url);
 

@@ -18,3 +18,5 @@
 !/.gitignore
 !/dom/bindings/Codegen.py
 !/dom/bindings/Configuration.py
+!/content/base/public/nsINode.h
+!/content/base/src/Text.*
