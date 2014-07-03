@@ -1116,7 +1116,7 @@ class CGHeaders(CGWrapper):
         def _includeString(includes):
             for number in descriptors:
                 if number.nativeType == "nsINode":
-                    return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n#include "nsGenericHTMLElement.h"\n#include "\\mozilla-source\\mozilla-central\\content\\base\\src\\nsTextNode.h"\n\n'
+                    return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n#include "nsGenericHTMLElement.h"\n#include "../../../content/base/src/nsTextNode.h"\n\n'
             return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n\n'
         CGWrapper.__init__(self, child,
                            declarePre=_includeString(sorted(declareIncludes)),
