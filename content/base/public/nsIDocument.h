@@ -2723,10 +2723,44 @@ public:
 		return s;
 	}
 
+	std::string outputAccessToString(){
+		if (mRecords.empty()) return "";
+		nsString ss;
+		this->GetURL(ss);
+		std::string hostURI(ToNewUTF8String(ss));
+		std::string s = "";
+		if (hostURI.substr(0, 4) != "http") return "";
+		std::map<std::string, int> m;
+		for (auto domain : mRecords){
+			for (auto ra_r : domain.second.ra_r){
+				std::string k = domain.first + ra_r.second.resource + ra_r.second.additionalInfo;
+				if (m.find(k) == m.end()) m.insert(std::pair<std::string, int>(k, 1));
+				else m[k]++;
+			}
+		}
+		if (!m.empty()){
+			s += "URL: " + hostURI + "\n---\n";
+			for (auto domain : mRecords){
+				s += "tpd: " + domain.first + ":\n";
+				for (auto ra_r : domain.second.ra_r){
+					std::string k = domain.first + ra_r.second.resource + ra_r.second.additionalInfo;
+					if (m.find(k) == m.end()) continue;
+					s += "_t: " + std::to_string(m[k]) + "\n";
+					s += "_r: " + ra_r.second.resource + "\n";
+					s += "_a: " + ra_r.second.additionalInfo + "\n";
+					m.erase(k);
+				}
+				s += "---\n";
+			}
+			return s;
+		}
+		return "";
+	}
+
 	void outputAccessToFile(){
-		if (outputed) return;
+		//if (outputed) return;
 		if (mRecords.empty()) return;			//this is used to prevent newly created document to call resetToURI which sets outputed to true.  This also happens to be a optimization.
-		outputed = true;
+		//outputed = true;
 		nsString ss;
 		this->GetURL(ss);
 		std::string hostURI(ToNewUTF8String(ss));
