@@ -20,3 +20,5 @@
 !/dom/bindings/Configuration.py
 !/content/base/public/nsINode.h
 !/content/base/src/Text.*
+!/dom/webidl/HTMLDocument.webidl
+!/dom/interfaces/html/nsIDOMHTMLDocument.idl

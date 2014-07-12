@@ -1691,6 +1691,14 @@ nsHTMLDocument::Close()
   return rv.ErrorCode();
 }
 
+NS_IMETHODIMP
+nsHTMLDocument::VisualizerOutputToFile()
+{
+	this->collectDOMAccess(this->GetBodyElement(), "", 1);
+	this->outputAccessToFile();
+	return NS_OK;
+}
+
 void
 nsHTMLDocument::Close(ErrorResult& rv)
 {
