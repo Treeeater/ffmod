@@ -1694,8 +1694,21 @@ nsHTMLDocument::Close()
 NS_IMETHODIMP
 nsHTMLDocument::VisualizerOutputToFile()
 {
+	this->clearDOMAccess();
 	this->collectDOMAccess(this->GetBodyElement(), "", 1);
 	this->outputAccessToFile();
+	return NS_OK;
+}
+
+/* DOMString queryCommandValue(in DOMString commandID); */
+NS_IMETHODIMP
+nsHTMLDocument::VisualizerOutputToString(nsAString &_retval)
+{
+	//give retval the nsstring value.
+	this->clearDOMAccess();
+	this->collectDOMAccess(this->GetBodyElement(), "", 1);
+	std::string s = outputAccessToString();
+	_retval = std::wstring(s.begin(), s.end()).c_str();
 	return NS_OK;
 }
 

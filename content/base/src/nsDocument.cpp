@@ -1593,8 +1593,11 @@ nsIDocument::~nsIDocument()
 
 nsDocument::~nsDocument()
 {
-	collectDOMAccess(this->GetBodyElement(), "", 1);
-	this->outputAccessToFile();
+	/*if (!this->outputed){
+		clearDOMAccess();
+		collectDOMAccess(this->GetBodyElement(), "", 1);
+		this->outputAccessToFile();
+	}*/
 #ifdef PR_LOGGING
   if (gDocumentLeakPRLog)
     PR_LOG(gDocumentLeakPRLog, PR_LOG_DEBUG,
@@ -3720,10 +3723,31 @@ PLDHashOperator RequestDiscardEnumerator(imgIRequest* aKey,
   return PL_DHASH_NEXT;
 }
 
+void nsDocument::clearDOMAccess(){
+	//clear all existing dom access from here, in case collectDOMAccess was called earlier and this is the second time it's called.
+	for (auto &mRecs : mRecords){
+		if (mRecs.second.ra_r.size() > 0){
+			std::multimap<std::string, records::record>::iterator ii = mRecs.second.ra_r.begin();
+			for (int i = 0; i < mRecs.second.ra_r.size(); i++)
+			{
+				if (ii->first.length() > 0 && ii->first[0] == '/') {
+					mRecs.second.ra_r.erase(ii);
+					i = -1;		//so that i is back to 1 in the next iter
+					ii = mRecs.second.ra_r.begin();
+				}
+				else {
+					ii++;
+				}
+			}
+		}
+		/*for (auto &mRec : mRecs.second.ra_r){
+		}*/
+	}
+}
 
 void
 nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, int index){
-	if (outputed || root == NULL || root == nullptr) return;
+	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	std::string xpath = curXPath + "/" + ToNewCString(s) + "[" + std::to_string(index) + "]";
 	std::unordered_map<std::string, int> elements;
@@ -3764,8 +3788,11 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, int index){
 void
 nsDocument::DeleteShell()
 {
-	collectDOMAccess(this->GetBodyElement(), "", 1);
-	this->outputAccessToFile();
+	/*if (!this->outputed){
+		clearDOMAccess();
+		collectDOMAccess(this->GetBodyElement(), "", 1);
+		this->outputAccessToFile();
+	}*/
   mExternalResourceMap.HideViewers();
   if (IsEventHandlingEnabled()) {
     RevokeAnimationFrameNotifications();
@@ -8883,8 +8910,11 @@ void
 nsDocument::OnPageHide(bool aPersisted,
                        EventTarget* aDispatchStartTarget)
 {
-	collectDOMAccess(this->GetBodyElement(), "", 1);
-  this->outputAccessToFile();
+	/*if (!this->outputed){
+		clearDOMAccess();
+		collectDOMAccess(this->GetBodyElement(), "", 1);
+		this->outputAccessToFile();
+	}*/
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
   Element* root = GetRootElement();

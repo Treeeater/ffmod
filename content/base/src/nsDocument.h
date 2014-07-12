@@ -678,6 +678,7 @@ public:
   typedef mozilla::dom::Element Element;
   using nsIDocument::GetElementsByTagName;
   void collectDOMAccess(nsIContent *root, std::string curXPath, int index);
+  void clearDOMAccess();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_SIZEOF_EXCLUDING_THIS
