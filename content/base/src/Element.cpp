@@ -727,7 +727,9 @@ Element::GetBoundingClientRect()
 already_AddRefed<DOMRect>
 Element::GetBoundingClientRect(JSContext *cx)
 {
-	//if (cx != NULL) yuchen::recordAccess("getBoundingClientRect accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "", cx);
+	//char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+	//if (cx != NULL) yuchen::recordAccess("getBoundingClientRect accessed", f, "", cx);
+	//free(f);
 	return GetBoundingClientRect();
 }
 

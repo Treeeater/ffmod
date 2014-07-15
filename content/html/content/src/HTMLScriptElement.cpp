@@ -176,7 +176,9 @@ HTMLScriptElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult& rv)
 {
 	if (cx != NULL) {
 		if (this->OwnerDoc() != NULL){
-			this->OwnerDoc()->recordAccess("Script src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aSrc)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->OwnerDoc()->recordAccess("Script src set", f, "src set to: " + std::string(ToNewUTF8String(aSrc)));
+			free(f);
 		}
 	}
 	rv = SetAttrHelper(nsGkAtoms::src, aSrc);

@@ -106,7 +106,9 @@ void HTMLImageElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult&
 		if (this->OwnerDoc() != NULL){
 			std::string s = ToNewUTF8String(aSrc);
 			//sometimes data is directly given to the image, w/o issuing a network request. this is a false positive that we should not record.
-			if (s.substr(0, 5) != "data:") this->OwnerDoc()->recordAccess("Image src set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + s);
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			if (s.substr(0, 5) != "data:") this->OwnerDoc()->recordAccess("Image src set", f, "src set to: " + s);
+			free(f);
 		}
 	}
 	SetHTMLAttr(nsGkAtoms::src, aSrc, aError);

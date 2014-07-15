@@ -6954,10 +6954,11 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
     if (cx != NULL){
       if (temp->OwnerDoc() != NULL){
-        std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
-        for (auto s : stacks){
+		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+        for (auto s : temp->convStackToSet(f)){
           temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
         }
+		free(f);
       }
     }
   }
@@ -6965,10 +6966,11 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
     if (cx != NULL){
       if (temp->OwnerDoc() != NULL){
-        std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
-        for (auto s : stacks){
+		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+        for (auto s : temp->convStackToSet(f)){
           temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
         }
+		free(f);
       }
     }
   }
@@ -6979,10 +6981,11 @@ catch (...){//sometimes nsXULElement or something else would call this, and will
             else:
                 prefix = prefix + fill("""if (cx != NULL){
   if (self->OwnerDoc() != NULL){
-    std::unordered_set<std::string> stacks = self->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
-    for (auto s : stacks){
+	char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+    for (auto s : self->convStackToSet(f)){
       self->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
     }
+	free(f);
   }
 }
 """, name=nativeName)
@@ -7333,10 +7336,11 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
     nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
     if (cx != NULL){
       if (temp->OwnerDoc() != NULL){
-        std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
-        for (auto s : stacks){
+		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+        for (auto s : temp->convStackToSet(f)){
           temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
         }
+		free(f);
       }
     }
   }
@@ -7344,10 +7348,11 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
     nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
     if (cx != NULL){
       if (temp->OwnerDoc() != NULL){
-        std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
-        for (auto s : stacks){
+		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+        for (auto s : temp->convStackToSet(f)){
           temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
         }
+		free(f);
       }
     }
   }
@@ -7358,10 +7363,11 @@ catch (...){//sometimes nsXULElement or something else would call this, and will
             else:
                 prefix = prefix + fill("""if (cx != NULL){
   if (self->OwnerDoc() != NULL){
-    std::unordered_set<std::string> stacks = self->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
-    for (auto s : stacks){
-      self->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
-    }
+	char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+	for (auto s : self->convStackToSet(f)){
+		self->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+	}
+	free(f);
   }
 }
 """, name=nativeName)
@@ -7478,10 +7484,11 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
     nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
     if (cx != NULL){
       if (temp->OwnerDoc() != NULL){
-        std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
-        for (auto s : stacks){
+		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+        for (auto s : temp->convStackToSet(f)){
           temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
         }
+		free(f);
       }
     }
   }
@@ -7489,10 +7496,11 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
     nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
     if (cx != NULL){
       if (temp->OwnerDoc() != NULL){
-        std::unordered_set<std::string> stacks = temp->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
-        for (auto s : stacks){
+		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+        for (auto s : temp->convStackToSet(f)){
           temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
         }
+		free(f);
       }
     }
   }
@@ -7503,10 +7511,11 @@ catch (...){//sometimes nsXULElement or something else would call this, and will
             else:
                 prefix = prefix + fill("""if (cx != NULL){
   if (self->OwnerDoc() != NULL){
-    std::unordered_set<std::string> stacks = self->convStackToSet(JS_EncodeString(cx, JS_ComputeStackString(cx)));
-    for (auto s : stacks){
+	char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+    for (auto s : self->convStackToSet(f)){
       self->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
     }
+	free(f);
   }
 }
 """, name=nativeName)

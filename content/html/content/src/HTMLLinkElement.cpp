@@ -122,7 +122,9 @@ NS_IMETHODIMP HTMLLinkElement::GetHref(JSContext *cx, nsAString& aValue)
 void HTMLLinkElement::SetHref(JSContext *cx, const nsAString& aHref, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->OwnerDoc() != NULL){
-			this->OwnerDoc()->recordAccess("Link href set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "src set to: " + std::string(ToNewUTF8String(aHref)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->OwnerDoc()->recordAccess("Link href set", f, "src set to: " + std::string(ToNewUTF8String(aHref)));
+			free(f);
 		}
 	}
 	SetHTMLAttr(nsGkAtoms::href, aHref, aRv);

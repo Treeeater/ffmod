@@ -102,7 +102,9 @@ already_AddRefed<IDBOpenDBRequest>
 IDBFactory::Open(JSContext *cx, const nsAString& aName, uint64_t aVersion, ErrorResult& aRv)
 {
 	if (cx != NULL && this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL) {
-		this->GetParentObject()->GetDoc()->recordAccess("indexedDB opened", JS_EncodeString(cx, JS_ComputeStackString(cx)), "DB Name: " + std::string(ToNewUTF8String(aName)));
+		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+		this->GetParentObject()->GetDoc()->recordAccess("indexedDB opened", f, "DB Name: " + std::string(ToNewUTF8String(aName)));
+		free(f);
 	}
 	return Open(nullptr, aName, Optional<uint64_t>(aVersion),
 		Optional<mozilla::dom::StorageType>(), false, aRv);

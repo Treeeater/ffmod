@@ -397,7 +397,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
 
-  std::multimap<std::string, std::string> stackInfo;
+  std::map<std::string, std::string> stackInfo;
 
 protected:
   /**

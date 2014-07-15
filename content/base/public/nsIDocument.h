@@ -2658,7 +2658,7 @@ public:
 				time = std::time(NULL);
 			}
 		};
-		std::multimap<std::string, record> ra_r;			//string is res and add, record contains all information directly.
+		std::map<std::string, record> ra_r;			//string is res and add, record contains all information directly.
 	};
 
 	std::map<std::string, records> mRecords;

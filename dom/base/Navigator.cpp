@@ -338,7 +338,9 @@ NS_IMETHODIMP
 Navigator::GetUserAgent(JSContext *cx, nsAString& aUserAgent){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.userAgent accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.userAgent accessed", f, "");
+			free(f);
 		}
 	}
 	return GetUserAgent(aUserAgent);
@@ -364,7 +366,9 @@ NS_IMETHODIMP
 Navigator::GetAppCodeName(JSContext *cx, nsAString& aAppCodeName){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.appCodeName accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.appCodeName accessed", f, "");
+			free(f);
 		}
 	}
 	return GetAppCodeName(aAppCodeName);
@@ -380,7 +384,9 @@ NS_IMETHODIMP
 Navigator::GetAppVersion(JSContext *cx, nsAString& aAppVersion){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.appVersion accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.appVersion accessed", f, "");
+			free(f);
 		}
 	}
 	return GetAppVersion(aAppVersion);
@@ -471,7 +477,9 @@ NS_IMETHODIMP
 Navigator::GetLanguage(JSContext *cx, nsAString& aLanguage){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.language accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.language accessed", f, "");
+			free(f);
 		}
 	}
 	return GetLanguage(aLanguage);
@@ -531,7 +539,9 @@ NS_IMETHODIMP
 Navigator::GetVendor(JSContext *cx, nsAString& aVendor){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.vendor accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.vendor accessed", f, "");
+			free(f);
 		}
 	}
 	return GetVendor(aVendor);
@@ -548,7 +558,9 @@ NS_IMETHODIMP
 Navigator::GetVendorSub(JSContext *cx, nsAString& aVendorSub){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.vendorSub accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.vendorSub accessed", f, "");
+			free(f);
 		}
 	}
 	return GetVendorSub(aVendorSub);
@@ -565,7 +577,9 @@ NS_IMETHODIMP
 Navigator::GetProduct(JSContext *cx, nsAString& aProduct){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.product accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.product accessed", f, "");
+			free(f);
 		}
 	}
 	return GetProduct(aProduct);
@@ -583,7 +597,9 @@ NS_IMETHODIMP
 Navigator::GetProductSub(JSContext *cx, nsAString& aProductSub){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.productSub accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.productSub accessed", f, "");
+			free(f);
 		}
 	}
 	return GetProductSub(aProductSub);
@@ -670,7 +686,9 @@ bool
 Navigator::CookieEnabled(JSContext *cx){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.cookieEnabled accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.cookieEnabled accessed", f, "");
+			free(f);
 		}
 	}
 	return CookieEnabled();
@@ -686,7 +704,9 @@ bool
 Navigator::OnLine(JSContext *cx){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.onLine accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.onLine accessed", f, "");
+			free(f);
 		}
 	}
 	return OnLine();
@@ -766,7 +786,9 @@ bool
 Navigator::JavaEnabled(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("Navigator.javaEnabled accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("Navigator.javaEnabled accessed", f, "");
+			free(f);
 		}
 	}
 	return JavaEnabled(aRv);

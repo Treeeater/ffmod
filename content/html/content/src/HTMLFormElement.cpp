@@ -271,7 +271,9 @@ HTMLFormElement::Submit(JSContext *cx, ErrorResult& aRv)
 	rv = GetAction(aSpec);
 	if (cx != NULL) {
 		if (this->OwnerDoc() != NULL){
-			this->OwnerDoc()->recordAccess("Form submitted", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Action URL is: " + std::string(ToNewUTF8String(aSpec)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->OwnerDoc()->recordAccess("Form submitted", f, "Action URL is: " + std::string(ToNewUTF8String(aSpec)));
+			free(f);
 		}
 	}
 	// Send the submit event

@@ -365,7 +365,9 @@ nsScreen::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
 int32_t nsScreen::GetTop(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.top read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.top read", f, "");
+			free(f);
 		}
 	}
 	return GetTop(aRv);
@@ -373,7 +375,9 @@ int32_t nsScreen::GetTop(JSContext *cx, ErrorResult& aRv){
 int32_t nsScreen::GetLeft(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.left read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.left read", f, "");
+			free(f);
 		}
 	}
 	return GetLeft(aRv);
@@ -381,7 +385,9 @@ int32_t nsScreen::GetLeft(JSContext *cx, ErrorResult& aRv){
 int32_t nsScreen::GetWidth(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.width read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.width read", f, "");
+			free(f);
 		}
 	}
 	return GetWidth(aRv);
@@ -389,7 +395,9 @@ int32_t nsScreen::GetWidth(JSContext *cx, ErrorResult& aRv){
 int32_t nsScreen::GetHeight(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.height read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.height read", f, "");
+			free(f);
 		}
 	}
 	return GetHeight(aRv);
@@ -397,7 +405,9 @@ int32_t nsScreen::GetHeight(JSContext *cx, ErrorResult& aRv){
 int32_t nsScreen::GetPixelDepth(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.pixel read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.pixel read", f, "");
+			free(f);
 		}
 	}
 	return GetPixelDepth(aRv);
@@ -405,7 +415,9 @@ int32_t nsScreen::GetPixelDepth(JSContext *cx, ErrorResult& aRv){
 int32_t nsScreen::GetColorDepth(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.colorDepth read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.colorDepth read", f, "");
+			free(f);
 		}
 	}
 	return GetColorDepth(aRv);
@@ -413,7 +425,9 @@ int32_t nsScreen::GetColorDepth(JSContext *cx, ErrorResult& aRv){
 int32_t nsScreen::GetAvailTop(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.availTop read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.availTop read", f, "");
+			free(f);
 		}
 	}
 	return GetAvailTop(aRv);
@@ -421,7 +435,9 @@ int32_t nsScreen::GetAvailTop(JSContext *cx, ErrorResult& aRv){
 int32_t nsScreen::GetAvailLeft(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.availLeft read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.availLeft read", f, "");
+			free(f);
 		}
 	}
 	return GetAvailLeft(aRv);
@@ -429,7 +445,9 @@ int32_t nsScreen::GetAvailLeft(JSContext *cx, ErrorResult& aRv){
 int32_t nsScreen::GetAvailWidth(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.availWidth read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.availWidth read", f, "");
+			free(f);
 		}
 	}
 	return GetAvailWidth(aRv);
@@ -437,7 +455,9 @@ int32_t nsScreen::GetAvailWidth(JSContext *cx, ErrorResult& aRv){
 int32_t nsScreen::GetAvailHeight(JSContext *cx, ErrorResult& aRv){
 	if (cx != NULL) {
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("screen.availHeight read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("screen.availHeight read", f, "");
+			free(f);
 		}
 	}
 	return GetAvailHeight(aRv);

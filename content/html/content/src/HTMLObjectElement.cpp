@@ -468,7 +468,9 @@ HTMLObjectElement::SetData(JSContext *cx, const nsAString& aValue, ErrorResult& 
 {
 	if (cx != NULL) {
 		if (this->OwnerDoc() != NULL){
-			this->OwnerDoc()->recordAccess("Object data set", JS_EncodeString(cx, JS_ComputeStackString(cx)), "data set to: " + std::string(ToNewUTF8String(aValue)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->OwnerDoc()->recordAccess("Object data set", f, "data set to: " + std::string(ToNewUTF8String(aValue)));
+			free(f);
 		}
 	}
 	SetHTMLAttr(nsGkAtoms::data, aValue, aRv);

@@ -389,7 +389,9 @@ nsPluginElement::GetDescription(JSContext *cx, nsString& retval) const
 	GetDescription(retval);
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].description read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Description: " + std::string(ToNewUTF8String(retval)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].description read", f, "Description: " + std::string(ToNewUTF8String(retval)));
+			free(f);
 		}
 	}
 }
@@ -400,7 +402,9 @@ nsPluginElement::GetFilename(JSContext *cx, nsString& retval) const
 	GetFilename(retval);
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].fileName read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "FileName: " + std::string(ToNewUTF8String(retval)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].fileName read", f, "FileName: " + std::string(ToNewUTF8String(retval)));
+			free(f);
 		}
 	}
 }
@@ -411,7 +415,9 @@ nsPluginElement::GetVersion(JSContext *cx, nsString& retval) const
 	GetVersion(retval);
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].version read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Version: " + std::string(ToNewUTF8String(retval)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].version read", f, "Version: " + std::string(ToNewUTF8String(retval)));
+			free(f);
 		}
 	}
 }
@@ -422,7 +428,9 @@ nsPluginElement::GetName(JSContext *cx, nsString& retval) const
 	GetName(retval);
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].name read", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Name: " + std::string(ToNewUTF8String(retval)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].name read", f, "Name: " + std::string(ToNewUTF8String(retval)));
+			free(f);
 		}
 	}
 }
@@ -505,7 +513,9 @@ nsPluginElement::Length(JSContext *cx)
 {
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
-			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].length read", JS_EncodeString(cx, JS_ComputeStackString(cx)),"");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.plugins[].length read", f,"");
+			free(f);
 		}
 	}
 	return Length();

@@ -2656,9 +2656,11 @@ nsXMLHttpRequest::Send(JSContext *cx, nsIVariant* aVariant, const Nullable<Reque
   }
 
   if (cx != NULL) {
-	  if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-		  this->GetOwner()->GetDoc()->recordAccess("XMLHttpRequest sent", JS_EncodeString(cx, JS_ComputeStackString(cx)), "Sent to: " + myc_url);
-	  }
+	if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
+	  char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+	  this->GetOwner()->GetDoc()->recordAccess("XMLHttpRequest sent", f, "Sent to: " + myc_url);
+	  free(f);
+	}
   }
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
   // in turn keeps STOP button from becoming active.  If the consumer passed in

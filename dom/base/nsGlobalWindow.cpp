@@ -10437,7 +10437,9 @@ nsIDOMStorage*
 nsGlobalWindow::GetLocalStorage(JSContext *cx, ErrorResult& aError){
 	if (cx != NULL) {
 		if (this->GetDoc() != NULL) {
-			this->GetDoc()->recordAccess("localStorage accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetDoc()->recordAccess("localStorage accessed", f, "");
+			free(f);
 		}
 	}
 	return GetLocalStorage(aError);

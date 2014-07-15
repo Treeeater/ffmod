@@ -266,7 +266,9 @@ int32_t nsGenericHTMLElement::OffsetHeight(JSContext *cx)
 {
 	/*if (cx != NULL) {
 		if (this->GetDocument() != NULL){
-			this->GetDocument()->recordAccess("OffsetHeight accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetDocument()->recordAccess("OffsetHeight accessed", f, "");
+			free(f);
 		}
 	}*/
 	return OffsetHeight();
@@ -276,7 +278,9 @@ int32_t nsGenericHTMLElement::OffsetWidth(JSContext *cx)
 {
 	/*if (cx != NULL) {
 		if (this->GetDocument() != NULL){
-			this->GetDocument()->recordAccess("OffsetWidth accessed", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetDocument()->recordAccess("OffsetWidth accessed", f, "");
+			free(f);
 		}
 	}*/
 	return OffsetWidth();

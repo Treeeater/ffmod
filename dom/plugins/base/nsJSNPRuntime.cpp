@@ -1433,7 +1433,9 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
 static bool
 CallNPMethod(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  //if (cx != NULL) yuchen::recordAccess("NPAPI method called!", JS_EncodeString(cx, JS_ComputeStackString(cx)), "", cx);
+  //char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+  //if (cx != NULL) yuchen::recordAccess("NPAPI method called!", f, "", cx);
+  //free(f);
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JS::Rooted<JSObject*> obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)

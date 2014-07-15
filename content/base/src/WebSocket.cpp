@@ -1184,7 +1184,9 @@ WebSocket::Send(JSContext *cx, const nsAString& aData, ErrorResult& aRv)
 {
 	if (cx != NULL){
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", JS_EncodeString(cx, JS_ComputeStackString(cx)), "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", f, "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			free(f);
 		}
 	}
 	Send(aData, aRv);
@@ -1223,7 +1225,9 @@ WebSocket::Send(JSContext *cx, nsIDOMBlob* aData, ErrorResult& aRv)
 {
 	if (cx != NULL){
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", JS_EncodeString(cx, JS_ComputeStackString(cx)), "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", f, "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			free(f);
 		}
 	}
 	Send(aData, aRv);
@@ -1251,7 +1255,9 @@ WebSocket::Send(JSContext *cx, const ArrayBuffer& aData, ErrorResult& aRv)
 {
 	if (cx != NULL){
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", JS_EncodeString(cx, JS_ComputeStackString(cx)), "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", f, "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			free(f);
 		}
 	}
 	Send(aData, aRv);
@@ -1279,7 +1285,9 @@ WebSocket::Send(JSContext *cx, const ArrayBufferView& aData, ErrorResult& aRv)
 {
 	if (cx != NULL){
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", JS_EncodeString(cx, JS_ComputeStackString(cx)), "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", f, "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			free(f);
 		}
 	}
 	Send(aData, aRv);
@@ -1337,7 +1345,9 @@ ErrorResult& aRv)
 {
 	if (cx != NULL){
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
-			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", JS_EncodeString(cx, JS_ComputeStackString(cx)), "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", f, "sent to: " + std::string(ToNewUTF8String(mOriginalURL)));
+			free(f);
 		}
 	}
 	Send(aMsgStream, aMsgString, aMsgLength, aIsBinary, aRv);

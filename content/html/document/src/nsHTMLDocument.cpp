@@ -1262,7 +1262,9 @@ nsHTMLDocument::GetCookie(JSContext *cx, nsAString& aCookie, ErrorResult& rv)
 
 	nsXPIDLCString cookie;
 	if (cx!=NULL){
-			this->recordAccess("GetCookie", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+		this->recordAccess("GetCookie", f, "");
+		free(f);
 	}
     service->GetCookieString(codebaseURI, mChannel, getter_Copies(cookie));
     // CopyUTF8toUTF16 doesn't handle error
@@ -1310,7 +1312,9 @@ nsHTMLDocument::SetCookie(JSContext *cx, const nsAString& aCookie, ErrorResult& 
 
 		NS_ConvertUTF16toUTF8 cookie(aCookie);
 		if (cx!=NULL){
-			this->recordAccess("SetCookie", JS_EncodeString(cx, JS_ComputeStackString(cx)), "");
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			this->recordAccess("SetCookie", f, "");
+			free(f);
 		}
 		service->SetCookieString(codebaseURI, nullptr, cookie.get(), mChannel);
 	}
