@@ -123,7 +123,9 @@ void HTMLLinkElement::SetHref(JSContext *cx, const nsAString& aHref, ErrorResult
 	if (cx != NULL) {
 		if (this->OwnerDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
-			this->OwnerDoc()->recordAccess("Link href set", f, "src set to: " + std::string(ToNewUTF8String(aHref)));
+			char *cs = ToNewUTF8String(aHref);
+			this->OwnerDoc()->recordAccess("Link href set", f, "src set to: " + std::string(cs));
+			free(cs);
 			free(f);
 		}
 	}

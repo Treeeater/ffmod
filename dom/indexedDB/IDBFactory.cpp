@@ -103,7 +103,9 @@ IDBFactory::Open(JSContext *cx, const nsAString& aName, uint64_t aVersion, Error
 {
 	if (cx != NULL && this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL) {
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
-		this->GetParentObject()->GetDoc()->recordAccess("indexedDB opened", f, "DB Name: " + std::string(ToNewUTF8String(aName)));
+		char *cs = ToNewUTF8String(aName);
+		this->GetParentObject()->GetDoc()->recordAccess("indexedDB opened", f, "DB Name: " + std::string(cs));
+		free(cs);
 		free(f);
 	}
 	return Open(nullptr, aName, Optional<uint64_t>(aVersion),

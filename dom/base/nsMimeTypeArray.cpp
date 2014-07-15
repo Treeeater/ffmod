@@ -271,7 +271,9 @@ nsMimeType::GetDescription(JSContext *cx, nsString& retval) const
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
-			this->GetParentObject()->GetDoc()->recordAccess("navigator.mimetypes[].description read", f, "Description: " + std::string(ToNewUTF8String(retval)));
+			char *cs = ToNewUTF8String(retval);
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.mimetypes[].description read", f, "Description: " + std::string(cs));
+			free(cs);
 			free(f);
 		}
 	}
@@ -297,7 +299,9 @@ nsMimeType::GetSuffixes(JSContext *cx, nsString& retval) const
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
-			this->GetParentObject()->GetDoc()->recordAccess("navigator.mimetypes[].suffixes read", f, "Suffixes: " + std::string(ToNewUTF8String(retval)));
+			char *cs = ToNewUTF8String(retval);
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.mimetypes[].suffixes read", f, "Suffixes: " + std::string(cs));
+			free(cs);
 			free(f);
 		}
 	}
@@ -310,7 +314,9 @@ nsMimeType::GetType(JSContext *cx, nsString& aRetval) const
 	if (cx != NULL) {
 		if (this->GetParentObject() != NULL && this->GetParentObject()->GetDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
-			this->GetParentObject()->GetDoc()->recordAccess("navigator.mimetypes[].type read", f, "Type: " + std::string(ToNewUTF8String(aRetval)));
+			char *cs = ToNewUTF8String(aRetval);
+			this->GetParentObject()->GetDoc()->recordAccess("navigator.mimetypes[].type read", f, "Type: " + std::string(cs));
+			free(cs);
 			free(f);
 		}
 	}

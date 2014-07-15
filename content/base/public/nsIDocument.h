@@ -2729,7 +2729,9 @@ public:
 		if (mRecords.empty()) return "";
 		nsString ss;
 		this->GetURL(ss);
-		std::string hostURI(ToNewUTF8String(ss));
+		char *cs = ToNewUTF8String(ss);
+		std::string hostURI(cs);
+		free(cs);
 		std::string s = "";
 		if (hostURI.substr(0, 4) != "http") return "";
 		std::map<std::string, int> m;
@@ -2765,7 +2767,9 @@ public:
 		//outputed = true;
 		nsString ss;
 		this->GetURL(ss);
-		std::string hostURI(ToNewUTF8String(ss));
+		char *cs = ToNewUTF8String(ss);
+		std::string hostURI(cs);
+		free(cs);
 		std::string s = "";
 		if (hostURI.substr(0, 4) != "http") return;
 		std::map<std::string, int> m;

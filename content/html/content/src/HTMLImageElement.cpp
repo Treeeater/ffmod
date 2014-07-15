@@ -104,7 +104,9 @@ void HTMLImageElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult&
 {
 	if (cx != NULL) {
 		if (this->OwnerDoc() != NULL){
-			std::string s = ToNewUTF8String(aSrc);
+			char *cs = ToNewUTF8String(aSrc);
+			std::string s = cs;
+			free(cs);
 			//sometimes data is directly given to the image, w/o issuing a network request. this is a false positive that we should not record.
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 			if (s.substr(0, 5) != "data:") this->OwnerDoc()->recordAccess("Image src set", f, "src set to: " + s);

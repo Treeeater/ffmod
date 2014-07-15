@@ -54,7 +54,9 @@ void HTMLIFrameElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult
 	if (cx != NULL) {
 		if (this->OwnerDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
-			this->OwnerDoc()->recordAccess("Iframe src set", f, "src set to: " + std::string(ToNewUTF8String(aSrc)));
+			char *cs = ToNewUTF8String(aSrc);
+			this->OwnerDoc()->recordAccess("Iframe src set", f, "src set to: " + std::string(cs));
+			free(cs);
 			free(f);
 		}
 	}

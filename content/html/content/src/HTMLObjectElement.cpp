@@ -469,7 +469,9 @@ HTMLObjectElement::SetData(JSContext *cx, const nsAString& aValue, ErrorResult& 
 	if (cx != NULL) {
 		if (this->OwnerDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
-			this->OwnerDoc()->recordAccess("Object data set", f, "data set to: " + std::string(ToNewUTF8String(aValue)));
+			char *cs = ToNewUTF8String(aValue);
+			this->OwnerDoc()->recordAccess("Object data set", f, "data set to: " + std::string(cs));
+			free(cs);
 			free(f);
 		}
 	}

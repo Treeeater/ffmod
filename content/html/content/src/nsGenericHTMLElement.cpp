@@ -3295,7 +3295,9 @@ std::unordered_set<std::string>
 nsGenericHTMLElement::convStackToSet(std::string stack){
 	nsString s;
 	this->OwnerDoc()->GetURL(s);
-	std::string hostURI(ToNewCString(s));
+	char *cs = ToNewCString(s);
+	std::string hostURI = cs;
+	free(cs);
 	std::istringstream iss(stack);
 	std::unordered_set<std::string> domains;
 	std::vector<std::string> tokens{ std::istream_iterator < std::string > {iss}, std::istream_iterator < std::string > {} };
