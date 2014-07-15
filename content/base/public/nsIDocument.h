@@ -2686,7 +2686,9 @@ public:
 	void recordAccess(std::string resource, std::string stack, std::string additional){
 		nsString s;
 		this->GetURL(s);
-		std::string hostURI(ToNewCString(s));
+		char *hostURIRaw = ToNewCString(s);
+		std::string hostURI = hostURIRaw;
+		free(hostURIRaw);
 		std::istringstream iss(stack);
 		std::vector<std::string> tokens{ std::istream_iterator < std::string > {iss}, std::istream_iterator < std::string > {} };
 		if (tokens.size() == 0) return;

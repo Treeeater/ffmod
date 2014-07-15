@@ -3746,10 +3746,26 @@ void nsDocument::clearDOMAccess(){
 }
 
 void
-nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, int index){
+nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index){
 	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
-	std::string xpath = curXPath + "/" + ToNewCString(s) + "[" + std::to_string(index) + "]";
+	nsCString id;
+	nsIAtom* gid = root->GetID();
+	std::string idstr = "";
+	if (gid != nullptr){
+		gid->ToUTF8String(id);
+		char *f = ToNewCString(id);
+		idstr = f;
+		free(f);
+	}
+	char *nodeNameRaw = ToNewCString(s);
+	curXPath = curXPath + "/" + nodeNameRaw + "[" + std::to_string(index) + "]";
+	if (idstr != "") { xpathWID = std::string("//") + nodeNameRaw + "[@id='" + idstr + "']"; }
+	else { xpathWID = xpathWID + "/" + nodeNameRaw + "[" + std::to_string(index) + "]"; }
+	free(nodeNameRaw);
+	std::string resourceToRecord;
+	if (xpathWID == curXPath) resourceToRecord = curXPath;
+	else resourceToRecord = curXPath + "|" + xpathWID;
 	std::unordered_map<std::string, int> elements;
 	try {
 		if (root->stackInfo.size() > 0) {
@@ -3759,13 +3775,13 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, int index){
 				std::string domain = st.first;
 				if (mRecords.find(domain) == mRecords.end()){
 					records recs;
-					records::record rec(xpath, st.second, "");
-					recs.ra_r.insert(std::pair<std::string, records::record>(xpath, rec));
+					records::record rec(resourceToRecord, st.second, "");
+					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord, rec));
 					mRecords.insert(std::pair<std::string, records>(domain, recs));
 				}
 				else {
-					records::record rec(xpath, st.second, "");
-					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(xpath, rec));
+					records::record rec(resourceToRecord, st.second, "");
+					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord, rec));
 				}
 			}
 		}
@@ -3777,10 +3793,12 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, int index){
 	next = next->GetFirstChild();
 	std::string nextNodeName;
 	while (next != nullptr && next != NULL){
-		nextNodeName = ToNewCString(next->NodeName());
+		char *nnn = ToNewCString(next->NodeName());
+		nextNodeName = nnn;
+		free(nnn);
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		collectDOMAccess(next, xpath, elements[nextNodeName]);
+		collectDOMAccess(next, curXPath, xpathWID, elements[nextNodeName]);
 		next = next->GetNextSibling();
 	}
 }
