@@ -3335,7 +3335,7 @@ class CastableObjectUnwrapper():
         substitution["codeOnFailure"] %= {
             'securityError': 'rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO'
         }
-        return fill(
+        retVal = fill(
             """
             {
               $*{uncheckedObjDecl}
@@ -3346,6 +3346,39 @@ class CastableObjectUnwrapper():
             }
             """,
             **substitution)
+        if (substitution["codeOnFailure"].find("Argument 1 of Node.insertBefore") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.appendChild") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.replaceChild") != -1):
+            tempText = ""
+            if (substitution["codeOnFailure"].find("Argument 1 of Node.insertBefore") != -1):
+                tempText = "insertedBefore"
+            elif (substitution["codeOnFailure"].find("Argument 1 of Node.appendChild") != -1):
+                tempText = "appendedChild"
+            else:
+                tempText = "replacedChild"
+            retVal = retVal + ("""if (cx != NULL){
+  if (arg0.get()->OwnerDoc() != NULL){
+    char *nameRaw = ToNewCString(arg0.get()->NodeName());
+    std::string name = nameRaw;
+    free(nameRaw);
+    if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR"){
+      nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
+      char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+      for (auto s : temp->convStackToSet(f)){
+        NonNullHelper(arg0).stackInfo.insert(std::pair<std::string, std::string>(s, "%s"));
+      }
+      free(f);
+	}
+	if (name == "#text"){
+	  nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
+      char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+      for (auto s : temp->convStackToSet(f)){
+        NonNullHelper(arg0).stackInfo.insert(std::pair<std::string, std::string>(s, "%s"));
+      }
+      free(f);
+	}
+  }
+}
+""" % (tempText, tempText) )
+        return retVal
 
 
 class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
