@@ -611,11 +611,14 @@ public:
   }
 
   void GetAttribute(const nsAString& aName, DOMString& aReturn);
+  void GetAttribute(JSContext *cx, const nsAString& aName, DOMString& aReturn);
   void GetAttributeNS(const nsAString& aNamespaceURI,
                       const nsAString& aLocalName,
                       nsAString& aReturn);
   void SetAttribute(const nsAString& aName, const nsAString& aValue,
-                    ErrorResult& aError);
+	  ErrorResult& aError);
+  void SetAttribute(JSContext *cx, const nsAString& aName, const nsAString& aValue,
+	  ErrorResult& aError);
   void SetAttributeNS(const nsAString& aNamespaceURI,
                       const nsAString& aLocalName,
                       const nsAString& aValue,
