@@ -7362,7 +7362,8 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
         else:
             prefix = ""
-        if self.descriptor.record:
+        if self.descriptor.record and nativeName != "GetNodeName" and nativeName != "NodeType" and nativeName != "GetParentNode" and nativeName != "GetTagName":
+			#get node name and node type, and node nav is not revealing much information. jquery tends to over-access things this way, therefore we do not mediate these accesses.
             if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
                 prefix = prefix + fill("""try{
   char *nameRaw = ToNewCString(self->NodeName());
