@@ -3364,7 +3364,7 @@ class CastableObjectUnwrapper():
       nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
         char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
         for (auto s : temp->convStackToSet(f)){
-          NonNullHelper(arg0).stackInfo.insert(std::pair<std::string, std::string>(s, "%s"));
+          NonNullHelper(arg0).stackInfo.insert(std::pair<std::string, std::string>(s + "|_|%s", "%s"));
         }
         free(f);
       }
@@ -3372,7 +3372,7 @@ class CastableObjectUnwrapper():
 	    nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
         char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
         for (auto s : temp->convStackToSet(f)){
-          NonNullHelper(arg0).stackInfo.insert(std::pair<std::string, std::string>(s, "%s"));
+          NonNullHelper(arg0).stackInfo.insert(std::pair<std::string, std::string>(s + "|_|%s", "%s"));
         }
         free(f);
 	  }
@@ -3381,7 +3381,7 @@ class CastableObjectUnwrapper():
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
-""" % (tempText, tempText) )
+""" % (tempText, tempText, tempText, tempText) )
         return retVal
 
 
@@ -6995,7 +6995,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
       if (temp->OwnerDoc() != NULL){
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
         for (auto s : temp->convStackToSet(f)){
-          temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+          temp->stackInfo.insert(std::pair<std::string, std::string>(s + "|_|${name}", "${name}"));
         }
 		free(f);
       }
@@ -7007,7 +7007,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
       if (temp->OwnerDoc() != NULL){
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
         for (auto s : temp->convStackToSet(f)){
-          temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+          temp->stackInfo.insert(std::pair<std::string, std::string>(s + "|_|${name}", "${name}"));
         }
 		free(f);
       }
@@ -7022,7 +7022,7 @@ catch (...){//sometimes nsXULElement or something else would call this, and will
   if (self->OwnerDoc() != NULL){
 	char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
     for (auto s : self->convStackToSet(f)){
-      self->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+      self->stackInfo.insert(std::pair<std::string, std::string>(s + "|_|${name}", "${name}"));
     }
 	free(f);
   }
@@ -7380,7 +7380,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
       if (temp->OwnerDoc() != NULL){
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
         for (auto s : temp->convStackToSet(f)){
-          temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+          temp->stackInfo.insert(std::pair<std::string, std::string>(s + "|_|${name}", "${name}"));
         }
 		free(f);
       }
@@ -7392,7 +7392,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
       if (temp->OwnerDoc() != NULL){
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
         for (auto s : temp->convStackToSet(f)){
-          temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+          temp->stackInfo.insert(std::pair<std::string, std::string>(s + "|_|${name}", "${name}"));
         }
 		free(f);
       }
@@ -7407,7 +7407,7 @@ catch (...){//sometimes nsXULElement or something else would call this, and will
   if (self->OwnerDoc() != NULL){
 	char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 	for (auto s : self->convStackToSet(f)){
-		self->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+		self->stackInfo.insert(std::pair<std::string, std::string>(s + "|_|${name}", "${name}"));
 	}
 	free(f);
   }
@@ -7530,7 +7530,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
       if (temp->OwnerDoc() != NULL){
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
         for (auto s : temp->convStackToSet(f)){
-          temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+          temp->stackInfo.insert(std::pair<std::string, std::string>(s + "|_|${name}", "${name}"));
         }
 		free(f);
       }
@@ -7542,7 +7542,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
       if (temp->OwnerDoc() != NULL){
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
         for (auto s : temp->convStackToSet(f)){
-          temp->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+          temp->stackInfo.insert(std::pair<std::string, std::string>(s + "|_|${name}", "${name}"));
         }
 		free(f);
       }
@@ -7557,7 +7557,7 @@ catch (...){//sometimes nsXULElement or something else would call this, and will
   if (self->OwnerDoc() != NULL){
 	char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
     for (auto s : self->convStackToSet(f)){
-      self->stackInfo.insert(std::pair<std::string, std::string>(s, "${name}"));
+      self->stackInfo.insert(std::pair<std::string, std::string>(s + "|_|${name}", "${name}"));
     }
 	free(f);
   }

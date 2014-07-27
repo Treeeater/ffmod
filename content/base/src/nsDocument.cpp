@@ -3773,15 +3773,17 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 			//visit this first
 			for (auto st : root->stackInfo){
 				std::string domain = st.first;
+				std::size_t found = domain.find("|_|");
+				if (found != std::string::npos) domain = domain.substr(0, found);
 				if (mRecords.find(domain) == mRecords.end()){
 					records recs;
 					records::record rec(resourceToRecord, st.second, "");
-					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord, rec));
+					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + st.second, rec));
 					mRecords.insert(std::pair<std::string, records>(domain, recs));
 				}
 				else {
 					records::record rec(resourceToRecord, st.second, "");
-					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord, rec));
+					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + st.second, rec));
 				}
 			}
 		}
