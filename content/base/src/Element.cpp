@@ -1006,7 +1006,22 @@ ErrorResult& aError){
 				if (temp->OwnerDoc() != NULL){
 					char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 					for (auto s : temp->convStackToSet(f)){
-						temp->stackInfo.insert(std::pair<std::string, std::string>(s, std::string("GetAttribute__") + attrName));
+						temp->stackInfo.insert(std::pair<std::string, std::string>(s, std::string("SetAttribute__") + attrName));
+						if ((name == "IMG" || name == "SCRIPT" || name == "IFRAME" || name == "SOURCE") && attrName == "src"){
+							char *cs = ToNewUTF8String(aValue);
+							temp->OwnerDoc()->recordAccess(name + " src set", f, "src set to: " + std::string(cs));
+							free(cs);
+						}
+						if (name == "OBJECT" && attrName == "data"){
+							char *cs = ToNewUTF8String(aValue);
+							temp->OwnerDoc()->recordAccess(name + " data set", f, "data set to: " + std::string(cs));
+							free(cs);
+						}
+						if (name == "LINK" && attrName == "href"){
+							char *cs = ToNewUTF8String(aValue);
+							temp->OwnerDoc()->recordAccess(name + " href set", f, "href set to: " + std::string(cs));
+							free(cs);
+						}
 					}
 					free(f);
 				}
@@ -1018,7 +1033,7 @@ ErrorResult& aError){
 				if (temp->OwnerDoc() != NULL){
 					char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 					for (auto s : temp->convStackToSet(f)){
-						temp->stackInfo.insert(std::pair<std::string, std::string>(s, std::string("GetAttribute__") + attrName));
+						temp->stackInfo.insert(std::pair<std::string, std::string>(s, std::string("SetAttribute__") + attrName));
 					}
 					free(f);
 				}
