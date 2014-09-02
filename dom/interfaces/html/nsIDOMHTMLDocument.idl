@@ -43,7 +43,9 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
                                  [optional] in DOMString aFeatures);
   void                      close();
   void						visualizerOutputToFile();
+  void						visualizerOutputToFileAdd();
   DOMString					visualizerOutputToString();
+  DOMString					visualizerOutputToStringAdd();
 
   [implicit_jscontext]
   void                      write([optional, Null(Stringify)] in DOMString text);

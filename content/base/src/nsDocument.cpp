@@ -3746,7 +3746,7 @@ void nsDocument::clearDOMAccess(){
 }
 
 void
-nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index){
+nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool collectAdditionalInfo){
 	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	nsCString id;
@@ -3775,15 +3775,19 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 				std::string domain = st.first;
 				std::size_t found = domain.find("|_|");
 				if (found != std::string::npos) domain = domain.substr(0, found);
+				std::string record = st.second;
+				if (!collectAdditionalInfo) {
+					std::size_t a = record.find("->>>");
+					if (a != std::string::npos) record = record.substr(0, a);
+				}
+				records::record rec(resourceToRecord, record, "");
 				if (mRecords.find(domain) == mRecords.end()){
 					records recs;
-					records::record rec(resourceToRecord, st.second, "");
-					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + st.second, rec));
+					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record, rec));
 					mRecords.insert(std::pair<std::string, records>(domain, recs));
 				}
 				else {
-					records::record rec(resourceToRecord, st.second, "");
-					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + st.second, rec));
+					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record, rec));
 				}
 			}
 		}
@@ -3800,7 +3804,7 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 		free(nnn);
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		collectDOMAccess(next, curXPath, xpathWID, elements[nextNodeName]);
+		collectDOMAccess(next, curXPath, xpathWID, elements[nextNodeName], collectAdditionalInfo);
 		next = next->GetNextSibling();
 	}
 }
