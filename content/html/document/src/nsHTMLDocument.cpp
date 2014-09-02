@@ -1699,7 +1699,16 @@ NS_IMETHODIMP
 nsHTMLDocument::VisualizerOutputToFile()
 {
 	this->clearDOMAccess();
-	this->collectDOMAccess(this->GetBodyElement(), "", "", 1);
+	this->collectDOMAccess(this->GetBodyElement(), "", "", 1, false);
+	this->outputAccessToFile();
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::VisualizerOutputToFileAdd()
+{
+	this->clearDOMAccess();
+	this->collectDOMAccess(this->GetBodyElement(), "", "", 1, true);
 	this->outputAccessToFile();
 	return NS_OK;
 }
@@ -1710,7 +1719,19 @@ nsHTMLDocument::VisualizerOutputToString(nsAString &_retval)
 {
 	//give retval the nsstring value.
 	this->clearDOMAccess();
-	this->collectDOMAccess(this->GetBodyElement(), "", "", 1);
+	this->collectDOMAccess(this->GetBodyElement(), "", "", 1, false);
+	std::string s = outputAccessToString();
+	_retval = std::wstring(s.begin(), s.end()).c_str();
+	return NS_OK;
+}
+
+/* DOMString queryCommandValue(in DOMString commandID); */
+NS_IMETHODIMP
+nsHTMLDocument::VisualizerOutputToStringAdd(nsAString &_retval)
+{
+	//give retval the nsstring value.
+	this->clearDOMAccess();
+	this->collectDOMAccess(this->GetBodyElement(), "", "", 1, true);
 	std::string s = outputAccessToString();
 	_retval = std::wstring(s.begin(), s.end()).c_str();
 	return NS_OK;

@@ -72,7 +72,9 @@ interface HTMLDocument : Document {
 
   void clear();
   void visualizerOutputToFile();
+  void visualizerOutputToFileAdd();
   DOMString visualizerOutputToString();
+  DOMString visualizerOutputToStringAdd();
 
   readonly attribute HTMLAllCollection all;
 
