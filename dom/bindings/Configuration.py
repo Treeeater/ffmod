@@ -379,6 +379,7 @@ class Descriptor(DescriptorProvider):
                              (self.nativeOwnership != 'owned' and
                               desc.get('wrapperCache', True)))
         self.record = desc.get('record', False)
+        self.includeNSDocument = desc.get('includeNSDocument', False)
 		
         def make_name(name):
             return name + "_workers" if self.workers else name

@@ -2650,12 +2650,14 @@ public:
 			std::string additionalInfo;		//expanding non-node parameters
 			std::string nodeParamInfo;		//expanding node content when applicable in API calls, such as appendChild(node)
 			std::time_t time;
+			bool shouldRemove;				//if visualizerOutputTo* is called multiple times, we remove DOM element access (because we re-collect them). However, removed nodes records should not be removed since we can never collect them again.
 
 			record(std::string r, std::string a, std::string n){
 				resource = r;
 				additionalInfo = a;
 				nodeParamInfo = n;
 				time = std::time(NULL);
+				shouldRemove = true;
 			}
 		};
 		std::map<std::string, record> ra_r;			//string is res and add, record contains all information directly.

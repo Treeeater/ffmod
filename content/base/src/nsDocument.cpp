@@ -3730,7 +3730,7 @@ void nsDocument::clearDOMAccess(){
 			std::multimap<std::string, records::record>::iterator ii = mRecs.second.ra_r.begin();
 			for (int i = 0; i < mRecs.second.ra_r.size(); i++)
 			{
-				if (ii->first.length() > 0 && ii->first[0] == '/') {
+				if (ii->first.length() > 0 && ii->first[0] == '/' && ii->second.shouldRemove) {
 					mRecs.second.ra_r.erase(ii);
 					i = -1;		//so that i is back to 1 in the next iter
 					ii = mRecs.second.ra_r.begin();
@@ -3746,7 +3746,7 @@ void nsDocument::clearDOMAccess(){
 }
 
 void
-nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index){
+nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool shouldRemove){
 	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	nsCString id;
@@ -3785,6 +3785,7 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 					nodeParamInfo = temp.substr(a + 4);
 				}
 				records::record rec(resourceToRecord, record, nodeParamInfo);
+				rec.shouldRemove = shouldRemove;
 				if (mRecords.find(domain) == mRecords.end()){
 					records recs;
 					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record, rec));
@@ -3808,9 +3809,51 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 		free(nnn);
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		collectDOMAccess(next, curXPath, xpathWID, elements[nextNodeName]);
+		collectDOMAccess(next, curXPath, xpathWID, elements[nextNodeName], shouldRemove);
 		next = next->GetNextSibling();
 	}
+}
+
+void 
+nsDocument::collectDOMAccess(nsIContent *root){
+	if (!root) return;
+	nsIContent *temp = root;
+	int index = 0;
+	std::string curXPath = "";
+	std::string xpathWID = "";
+	while (temp){
+		if (temp->NodeName().Equals(root->NodeName())) index++;
+		temp = temp->GetPreviousSibling();
+	}
+	temp = root->GetParentElement();
+	nsString s;
+	nsCString id;
+	char *nodeNameRaw;
+	while (temp){
+		s = temp->NodeName();
+		nodeNameRaw = ToNewCString(s);
+		if (xpathWID == ""){
+			nsIAtom* gid = temp->GetID();
+			if (gid != nullptr){
+				std::string idstr = "";
+				gid->ToUTF8String(id);
+				char *f = ToNewCString(id);
+				idstr = f;
+				free(f);
+				if (idstr != "") { xpathWID = std::string("//") + nodeNameRaw + "[@id='" + idstr + "']" + curXPath; }
+			}
+		}
+		int i = 0;
+		while (true){
+			if (temp->NodeName().EqualsASCII(nodeNameRaw)) i++;
+			if (temp->GetPreviousSibling()) temp = temp->GetPreviousSibling();
+			else break;
+		}
+		curXPath = "/" + std::string(nodeNameRaw) + "[" + std::to_string(i) + "]" + curXPath;
+		temp = temp->GetParentElement();
+	}
+	free(nodeNameRaw);
+	collectDOMAccess(root, curXPath, xpathWID, index, false);
 }
 
 void
