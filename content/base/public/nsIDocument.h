@@ -2647,14 +2647,14 @@ public:
 		class record{
 		public:
 			std::string resource;
-			std::string additionalInfo;
-			std::string stack;
+			std::string additionalInfo;		//expanding non-node parameters
+			std::string nodeParamInfo;		//expanding node content when applicable in API calls, such as appendChild(node)
 			std::time_t time;
 
-			record(std::string r, std::string a, std::string s){
+			record(std::string r, std::string a, std::string n){
 				resource = r;
 				additionalInfo = a;
-				stack = s;
+				nodeParamInfo = n;
 				time = std::time(NULL);
 			}
 		};
@@ -2684,6 +2684,7 @@ public:
 	}
 
 	void recordAccess(std::string resource, std::string stack, std::string additional){
+		//used by special API recording such as script src set.
 		nsString s;
 		this->GetURL(s);
 		char *hostURIRaw = ToNewCString(s);
@@ -2709,12 +2710,12 @@ public:
 		for (auto domain : domains){
 			if (mRecords.find(domain) == mRecords.end()){
 				records recs;
-				records::record rec(resource, additional, stack);
+				records::record rec(resource, additional, "");
 				recs.ra_r.insert(std::pair<std::string, records::record>(resource + additional, rec));
 				mRecords.insert(std::pair<std::string, records>(domain, recs));
 			}
 			else {
-				records::record rec(resource, additional, stack);
+				records::record rec(resource, additional, "");
 				mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resource + additional, rec));
 			}
 		}
@@ -2725,7 +2726,7 @@ public:
 		return s;
 	}
 
-	std::string outputAccessToString(){
+	std::string outputAccessToString(bool additionalNodeInfo){
 		if (mRecords.empty()) return "";
 		nsString ss;
 		this->GetURL(ss);
@@ -2752,6 +2753,7 @@ public:
 					s += "_t: " + std::to_string(m[k]) + "\n";
 					s += "_r: " + ra_r.second.resource + "\n";
 					s += "_a: " + ra_r.second.additionalInfo + "\n";
+					if (additionalNodeInfo && ra_r.second.nodeParamInfo != "") s += "_n: " + ra_r.second.nodeParamInfo + "\n";
 					m.erase(k);
 				}
 				s += "---\n";
@@ -2761,7 +2763,7 @@ public:
 		return "";
 	}
 
-	void outputAccessToFile(){
+	void outputAccessToFile(bool additionalNodeInfo){
 		//if (outputed) return;
 		if (mRecords.empty()) return;			//this is used to prevent newly created document to call resetToURI which sets outputed to true.  This also happens to be a optimization.
 		//outputed = true;
@@ -2790,6 +2792,7 @@ public:
 					s += "_t: " + std::to_string(m[k]) + "\n";
 					s += "_r: " + ra_r.second.resource + "\n";
 					s += "_a: " + ra_r.second.additionalInfo + "\n";
+					if (additionalNodeInfo && ra_r.second.nodeParamInfo != "") s += "_n: " + ra_r.second.nodeParamInfo + "\n";
 					m.erase(k);
 				}
 				s += "---\n";

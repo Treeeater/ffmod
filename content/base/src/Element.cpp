@@ -944,7 +944,7 @@ Element::GetAttribute(JSContext *cx, const nsAString& aName, DOMString& aReturn)
 				if (temp->OwnerDoc() != NULL){
 					char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 					for (auto s : temp->convStackToSet(f)){
-						temp->stackInfo.insert(std::pair<std::string, std::string>(s, std::string("GetAttribute__") + attrName));
+						temp->stackInfo.insert(s + "|_|" + std::string("GetAttribute__") + attrName);
 					}
 					free(f);
 				}
@@ -956,7 +956,7 @@ Element::GetAttribute(JSContext *cx, const nsAString& aName, DOMString& aReturn)
 				if (temp->OwnerDoc() != NULL){
 					char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 					for (auto s : temp->convStackToSet(f)){
-						temp->stackInfo.insert(std::pair<std::string, std::string>(s, std::string("GetAttribute__") + attrName));
+						temp->stackInfo.insert(s + "|_|" + std::string("GetAttribute__") + attrName);
 					}
 					free(f);
 				}
@@ -1006,7 +1006,7 @@ ErrorResult& aError){
 				if (temp->OwnerDoc() != NULL){
 					char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 					for (auto s : temp->convStackToSet(f)){
-						temp->stackInfo.insert(std::pair<std::string, std::string>(s, std::string("SetAttribute__") + attrName));
+						temp->stackInfo.insert(s + "|_|" + std::string("SetAttribute__") + attrName);
 						if ((name == "IMG" || name == "SCRIPT" || name == "IFRAME" || name == "SOURCE") && attrName == "src"){
 							char *cs = ToNewUTF8String(aValue);
 							temp->OwnerDoc()->recordAccess(name + " src set", f, "src set to: " + std::string(cs));
@@ -1033,7 +1033,7 @@ ErrorResult& aError){
 				if (temp->OwnerDoc() != NULL){
 					char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 					for (auto s : temp->convStackToSet(f)){
-						temp->stackInfo.insert(std::pair<std::string, std::string>(s, std::string("SetAttribute__") + attrName));
+						temp->stackInfo.insert(s + "|_|" + std::string("SetAttribute__") + attrName);
 					}
 					free(f);
 				}
