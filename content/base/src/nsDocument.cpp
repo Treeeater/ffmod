@@ -3746,7 +3746,7 @@ void nsDocument::clearDOMAccess(){
 }
 
 void
-nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool collectAdditionalInfo){
+nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index){
 	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	nsCString id;
@@ -3772,15 +3772,19 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 			//this is a workaround to avoid crashing Firefox when stackInfo is somehow uninitialized. We assume there are less than 1000 3p domains each page.
 			//visit this first
 			for (auto st : root->stackInfo){
-				std::string domain = st.first;
-				std::size_t found = domain.find("|_|");
-				if (found != std::string::npos) domain = domain.substr(0, found);
-				std::string record = st.second;
-				if (!collectAdditionalInfo) {
-					std::size_t a = record.find("->>>");
-					if (a != std::string::npos) record = record.substr(0, a);
+				std::string temp = st;
+				std::string domain = "";
+				std::string nodeParamInfo = "";
+				std::size_t found = temp.find("|_|");
+				if (found != std::string::npos) domain = temp.substr(0, found);
+				temp = temp.substr(found + 3);
+				std::string record = temp;
+				std::size_t a = temp.find("->>>");
+				if (a != std::string::npos) {
+					record = temp.substr(0, a);
+					nodeParamInfo = temp.substr(a + 4);
 				}
-				records::record rec(resourceToRecord, record, "");
+				records::record rec(resourceToRecord, record, nodeParamInfo);
 				if (mRecords.find(domain) == mRecords.end()){
 					records recs;
 					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record, rec));
@@ -3804,7 +3808,7 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 		free(nnn);
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		collectDOMAccess(next, curXPath, xpathWID, elements[nextNodeName], collectAdditionalInfo);
+		collectDOMAccess(next, curXPath, xpathWID, elements[nextNodeName]);
 		next = next->GetNextSibling();
 	}
 }

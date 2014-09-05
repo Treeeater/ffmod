@@ -21,7 +21,7 @@
 #include "js/TypeDecls.h"     // for Handle, Value, JSObject, JSContext
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include <map>
+#include <unordered_set>
 
 // Including 'windows.h' will #define GetClassInfo to something else.
 #ifdef XP_WIN
@@ -397,7 +397,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
 
-  std::map<std::string, std::string> stackInfo;
+  std::unordered_set<std::string> stackInfo;
 
 protected:
   /**
