@@ -1114,10 +1114,22 @@ class CGHeaders(CGWrapper):
 
         # Let the machinery do its thing.
         def _includeString(includes):
+            extra = ""
+            nsINode = False
+            includeNSDocument = False
             for number in descriptors:
                 if number.nativeType == "nsINode":
-                    return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n#include "nsGenericHTMLElement.h"\n#include "../../../content/base/src/nsTextNode.h"\n\n'
-            return ''.join(['#include "%s"\n' % i for i in includes]) + '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n\n'
+					nsINode = True
+                if number.includeNSDocument:
+                    includeNSDocument = True
+            if (nsINode):
+			    extra = '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n#include "nsGenericHTMLElement.h"\n#include "../../../content/base/src/nsTextNode.h"\n'
+            else:
+				extra = '\n#include <unordered_set>\n#include "jsapi.h"\n#include "jsfriendapi.h"\n'
+            if (includeNSDocument):
+                extra += '#include "../../../content/base/src/nsDocument.h"\n'
+            extra += "\n"
+            return ''.join(['#include "%s"\n' % i for i in includes]) + extra
         CGWrapper.__init__(self, child,
                            declarePre=_includeString(sorted(declareIncludes)),
                            definePre=_includeString(sorted(set(defineIncludes) |
@@ -3346,6 +3358,7 @@ class CastableObjectUnwrapper():
             }
             """,
             **substitution)
+        removeChildRecording = ""
         if (substitution["codeOnFailure"].find("Argument 1 of Node.insertBefore") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.appendChild") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.replaceChild") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.removeChild") != -1):
             tempText = ""
             if (substitution["codeOnFailure"].find("Argument 1 of Node.insertBefore") != -1):
@@ -3356,6 +3369,8 @@ class CastableObjectUnwrapper():
                 tempText = "ReplaceChild"
             else:
 			    tempText = "RemoveChild"
+			    removeChildRecording = """
+	    (reinterpret_cast<nsDocument *>(temp->OwnerDoc()))->collectDOMAccess(temp);"""
             retVal = retVal + ("""std::string record = "";
 try{
   if (cx != NULL){
@@ -3364,7 +3379,7 @@ try{
 	  std::string name = nameRaw;
 	  free(nameRaw);
 	  if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR"){
-	  nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(arg0.get());
+	    nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(arg0.get());%s
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 		nsString s;
 		temp->GetOuterHTML(s);
@@ -3418,7 +3433,7 @@ try{
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
-""" % (tempText, tempText) )
+""" % (removeChildRecording, tempText, tempText) )
         return retVal
 
 
@@ -7018,7 +7033,8 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
         nativeName = CGSpecializedMethod.makeNativeName(self.descriptor,
                                                         self.method)
         prefix = ""
-        excluded = ["SetAttribute", "GetAttribute", "GetFirstChild", "GetLastChild", "GetPreviousSibling", "GetNextSibling", "HasChildNodes", "ChildNodes", "GetParentNode", "GetParentElement", "GetOwnerDocument", "GetNodeName", "NodeType", "GetTagName", "InsertBefore", "AppendChild", "RemoveChild", "ReplaceChild"]
+        excluded = ["SetAttribute", "GetAttribute", "GetFirstChild", "GetLastChild", "GetPreviousSibling", "GetNextSibling", "HasChildNodes", "ChildNodes", "GetParentNode", "GetParentElement", "GetOwnerDocument", "GetNodeName", "NodeType", "GetTagName", "InsertBefore", "AppendChild", "RemoveChild", "ReplaceChild", "Children", "GetNextElementSibling", "GetFirstElementChild"]
+
         if self.descriptor.record and (not (nativeName in excluded)):
 			#g/setattribute require special treatment.
             if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
@@ -7557,6 +7573,18 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
                                                         self.attr)
         prefix = ""
         if self.descriptor.record:
+            setHTMLRecording = ""
+            if (nativeName == "SetOuterHTML"):
+                setHTMLRecording = """
+    (reinterpret_cast<nsDocument *>(self->OwnerDoc()))->collectDOMAccess(self);"""
+            elif (nativeName == "SetInnerHTML"):
+                setHTMLRecording = """
+    Element *t = self->GetFirstElementChild();
+    nsDocument *doc = (reinterpret_cast<nsDocument *>(self->OwnerDoc()));
+    while (t){
+        doc->collectDOMAccess(t);
+        t = t->GetNextElementSibling();
+    }"""
             if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
                 prefix = prefix + fill("""try{
   char *nameRaw = ToNewCString(self->NodeName());
@@ -7564,7 +7592,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
   free(nameRaw);
   if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR")
   {
-    nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
+    nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);${s}
     if (cx != NULL){
       if (temp->OwnerDoc() != NULL){
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
@@ -7590,7 +7618,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
-""", name=nativeName)
+""", s=setHTMLRecording, name=nativeName)
             else:
                 prefix = prefix + fill("""if (cx != NULL){
   if (self->OwnerDoc() != NULL){

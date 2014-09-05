@@ -677,7 +677,8 @@ class nsDocument : public nsIDocument,
 public:
   typedef mozilla::dom::Element Element;
   using nsIDocument::GetElementsByTagName;
-  void collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index);
+  void collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool shouldRemove = true);
+  void collectDOMAccess(nsIContent *root);
   void clearDOMAccess();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
