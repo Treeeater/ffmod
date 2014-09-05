@@ -1699,8 +1699,8 @@ NS_IMETHODIMP
 nsHTMLDocument::VisualizerOutputToFile()
 {
 	this->clearDOMAccess();
-	this->collectDOMAccess(this->GetBodyElement(), "", "", 1, false);
-	this->outputAccessToFile();
+	this->collectDOMAccess(this->GetBodyElement(), "", "", 1);
+	this->outputAccessToFile(false);
 	return NS_OK;
 }
 
@@ -1708,8 +1708,8 @@ NS_IMETHODIMP
 nsHTMLDocument::VisualizerOutputToFileAdd()
 {
 	this->clearDOMAccess();
-	this->collectDOMAccess(this->GetBodyElement(), "", "", 1, true);
-	this->outputAccessToFile();
+	this->collectDOMAccess(this->GetBodyElement(), "", "", 1);
+	this->outputAccessToFile(true);
 	return NS_OK;
 }
 
@@ -1719,8 +1719,8 @@ nsHTMLDocument::VisualizerOutputToString(nsAString &_retval)
 {
 	//give retval the nsstring value.
 	this->clearDOMAccess();
-	this->collectDOMAccess(this->GetBodyElement(), "", "", 1, false);
-	std::string s = outputAccessToString();
+	this->collectDOMAccess(this->GetBodyElement(), "", "", 1);
+	std::string s = outputAccessToString(false);
 	_retval = std::wstring(s.begin(), s.end()).c_str();
 	return NS_OK;
 }
@@ -1731,8 +1731,8 @@ nsHTMLDocument::VisualizerOutputToStringAdd(nsAString &_retval)
 {
 	//give retval the nsstring value.
 	this->clearDOMAccess();
-	this->collectDOMAccess(this->GetBodyElement(), "", "", 1, true);
-	std::string s = outputAccessToString();
+	this->collectDOMAccess(this->GetBodyElement(), "", "", 1);
+	std::string s = outputAccessToString(true);
 	_retval = std::wstring(s.begin(), s.end()).c_str();
 	return NS_OK;
 }
@@ -1821,6 +1821,13 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
                             const nsAString& aText,
                             bool aNewlineTerminate)
 {
+	if (cx != NULL) {
+		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+		char *cs = ToNewUTF8String(aText);
+		this->recordAccess("document.write called", f, "String: " + std::string(cs));
+		free(cs);
+		free(f);
+	}
   mTooDeepWriteRecursion =
     (mWriteLevel > NS_MAX_DOCUMENT_WRITE_DEPTH || mTooDeepWriteRecursion);
   NS_ENSURE_STATE(!mTooDeepWriteRecursion);
