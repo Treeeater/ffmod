@@ -3825,7 +3825,7 @@ nsDocument::collectDOMAccess(nsIContent *root){
 		if (temp->NodeName().Equals(root->NodeName())) index++;
 		temp = temp->GetPreviousSibling();
 	}
-	temp = root->GetParentElement();
+	temp = root->GetParent();
 	nsString s;
 	nsCString id;
 	char *nodeNameRaw;
@@ -3855,7 +3855,7 @@ nsDocument::collectDOMAccess(nsIContent *root){
 			else break;
 		}
 		curXPath = "/" + std::string(nodeNameRaw) + "[" + std::to_string(i) + "]" + curXPath;
-		temp = temp->GetParentElement();
+		temp = temp->GetParent();
 	}
 	free(nodeNameRaw);
 	if (!sawBody) return;
