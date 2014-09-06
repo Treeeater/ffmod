@@ -3379,7 +3379,7 @@ try{
 	  std::string name = nameRaw;
 	  free(nameRaw);
 	  if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR"){
-	    nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(arg0.get());%s
+	    nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(arg0.get());
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 		nsString s;
 		temp->GetOuterHTML(s);
@@ -3388,7 +3388,7 @@ try{
 		  record = "%s->>>" + std::string(cs);
 		}
 		free(cs);
-		free(f);
+		free(f);%s
 	  }
 	  if (name == "#text"){
 		nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
@@ -3433,7 +3433,7 @@ try{
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
-""" % (removeChildRecording, tempText, tempText) )
+""" % (tempText, removeChildRecording, tempText) )
         return retVal
 
 
@@ -7420,7 +7420,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
         else:
             prefix = ""
-        excluded = ["SetAttribute", "GetAttribute", "GetFirstChild", "GetLastChild", "GetPreviousSibling", "GetNextSibling", "HasChildNodes", "ChildNodes", "GetParentNode", "GetParentElement", "GetOwnerDocument", "GetNodeName", "NodeType", "GetTagName", "InsertBefore", "AppendChild", "RemoveChild", "ReplaceChild"]
+        excluded = ["SetAttribute", "GetAttribute", "GetFirstChild", "GetLastChild", "GetPreviousSibling", "GetNextSibling", "HasChildNodes", "ChildNodes", "GetParentNode", "GetParentElement", "GetOwnerDocument", "GetNodeName", "NodeType", "GetTagName", "InsertBefore", "AppendChild", "RemoveChild", "ReplaceChild", "Children", "GetNextElementSibling", "GetFirstElementChild"]
         if self.descriptor.record and (not (nativeName in excluded)):
 			#get node name and node type, and node nav is not revealing much information. jquery tends to over-access things this way, therefore we do not mediate these accesses.
             if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
@@ -7592,7 +7592,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
   free(nameRaw);
   if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR")
   {
-    nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);${s}
+    nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(self);
     if (cx != NULL){
       if (temp->OwnerDoc() != NULL){
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
@@ -7601,7 +7601,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         }
 		free(f);
       }
-    }
+    }${s}
   }
   if (name == "#text"){
     nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
