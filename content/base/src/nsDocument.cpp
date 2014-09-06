@@ -3764,7 +3764,7 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 	else { xpathWID = xpathWID + "/" + nodeNameRaw + "[" + std::to_string(index) + "]"; }
 	free(nodeNameRaw);
 	std::string resourceToRecord;
-	if (xpathWID == curXPath) resourceToRecord = curXPath;
+	if (xpathWID == curXPath || (xpathWID.length()>1 && xpathWID[1]!='/')) resourceToRecord = curXPath;
 	else resourceToRecord = curXPath + "|" + xpathWID;
 	std::unordered_map<std::string, int> elements;
 	try {
@@ -3788,11 +3788,11 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 				rec.shouldRemove = shouldRemove;
 				if (mRecords.find(domain) == mRecords.end()){
 					records recs;
-					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record, rec));
+					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
 					mRecords.insert(std::pair<std::string, records>(domain, recs));
 				}
 				else {
-					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record, rec));
+					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
 				}
 			}
 		}
@@ -3829,9 +3829,14 @@ nsDocument::collectDOMAccess(nsIContent *root){
 	nsString s;
 	nsCString id;
 	char *nodeNameRaw;
+	bool sawBody = false;
 	while (temp){
 		s = temp->NodeName();
 		nodeNameRaw = ToNewCString(s);
+		if (strcmp(nodeNameRaw, "BODY") == 0) {
+			sawBody = true;
+			break;
+		}
 		if (xpathWID == ""){
 			nsIAtom* gid = temp->GetID();
 			if (gid != nullptr){
@@ -3853,6 +3858,8 @@ nsDocument::collectDOMAccess(nsIContent *root){
 		temp = temp->GetParentElement();
 	}
 	free(nodeNameRaw);
+	if (!sawBody) return;
+	curXPath = "/BODY[1]" + curXPath;
 	collectDOMAccess(root, curXPath, xpathWID, index, false);
 }
 

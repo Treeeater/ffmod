@@ -2741,6 +2741,7 @@ public:
 		for (auto domain : mRecords){
 			for (auto ra_r : domain.second.ra_r){
 				std::string k = domain.first + ra_r.second.resource + ra_r.second.additionalInfo;
+				if (additionalNodeInfo) k += ra_r.second.nodeParamInfo;
 				if (m.find(k) == m.end()) m.insert(std::pair<std::string, int>(k, 1));
 				else m[k]++;
 			}
@@ -2751,6 +2752,7 @@ public:
 				s += "tpd: " + domain.first + ":\n";
 				for (auto ra_r : domain.second.ra_r){
 					std::string k = domain.first + ra_r.second.resource + ra_r.second.additionalInfo;
+					if (additionalNodeInfo) k += ra_r.second.nodeParamInfo;
 					if (m.find(k) == m.end()) continue;
 					s += "_t: " + std::to_string(m[k]) + "\n";
 					s += "_r: " + ra_r.second.resource + "\n";
@@ -2780,6 +2782,7 @@ public:
 		for (auto domain : mRecords){
 			for (auto ra_r : domain.second.ra_r){
 				std::string k = domain.first + ra_r.second.resource + ra_r.second.additionalInfo;
+				if (additionalNodeInfo) k += ra_r.second.nodeParamInfo;
 				if (m.find(k) == m.end()) m.insert(std::pair<std::string, int>(k, 1));
 				else m[k]++;
 			}
@@ -2790,6 +2793,7 @@ public:
 				s += "tpd: " + domain.first + ":\n";
 				for (auto ra_r : domain.second.ra_r){
 					std::string k = domain.first + ra_r.second.resource + ra_r.second.additionalInfo;
+					if (additionalNodeInfo) k += ra_r.second.nodeParamInfo;
 					if (m.find(k) == m.end()) continue;
 					s += "_t: " + std::to_string(m[k]) + "\n";
 					s += "_r: " + ra_r.second.resource + "\n";
