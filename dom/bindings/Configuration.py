@@ -380,6 +380,7 @@ class Descriptor(DescriptorProvider):
                               desc.get('wrapperCache', True)))
         self.record = desc.get('record', False)
         self.includeNSDocument = desc.get('includeNSDocument', False)
+        self.special = desc.get('special', False)
 		
         def make_name(name):
             return name + "_workers" if self.workers else name
