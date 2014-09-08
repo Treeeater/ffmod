@@ -7463,7 +7463,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         else:
             prefix = ""
         excluded = ["SetAttribute", "GetAttribute", "GetFirstChild", "GetLastChild", "GetPreviousSibling", "GetNextSibling", "HasChildNodes", "ChildNodes", "GetParentNode", "GetParentElement", "GetOwnerDocument", "GetNodeName", "NodeType", "GetTagName", "InsertBefore", "AppendChild", "RemoveChild", "ReplaceChild", "Children", "GetNextElementSibling", "GetFirstElementChild", "SetAttributeNode"]
-        if self.descriptor.record and (not (nativeName in excluded)):
+        if self.descriptor.record and (not (nativeName in excluded)) and (not self.descriptor.special):
 			#get node name and node type, and node nav is not revealing much information. jquery tends to over-access things this way, therefore we do not mediate these accesses.
             if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
                 prefix = prefix + fill("""try{
