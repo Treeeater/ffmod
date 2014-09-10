@@ -44,8 +44,11 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
   void                      close();
   void						visualizerOutputToFile();
   void						visualizerOutputToFileAdd();
+  void						checkPolicyToFile([optional] in DOMString value);
+  
   DOMString					visualizerOutputToString();
   DOMString					visualizerOutputToStringAdd();
+  DOMString 				checkPolicyToString([optional] in DOMString value);
 
   [implicit_jscontext]
   void                      write([optional, Null(Stringify)] in DOMString text);
