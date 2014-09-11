@@ -225,6 +225,11 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "nsWindowMemoryReporter.h"
 #include <unordered_map>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
+#include <stack>
+#include <regex>
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3749,6 +3754,7 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 	std::string emptyString = "";
 	nsDocument::policyEntry retVal;
 	nsDocument::policyEntry invalidPolicy;
+	retVal.rawValue = str;
 	if (str.length() == 0) return retVal;
 	if (str[0] != '/' && str[0] != '^' && str.substr(0, 4) != "sub:" && str.substr(0, 5) != "root:"){
 		//special entry
@@ -3824,19 +3830,19 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 			str = str.substr(found);
 		}
 	}
-	else str = str.substr(1);		//skip /
+	if (str.length() > 0 && str[0] == '/') str = str.substr(1);		//skip /
 	if (str.length() == 1) return retVal;		//our job is done.
 	found = str.find('>');
 	//selector is gone, whatever remains is abs xpath or API name (with xpath always comes before API name)
 	if (found != std::string::npos){
 		//this policy has API limitations, separate and deal with them
-		retVal.param = str.substr(found + 1);
+		retVal.APIName = str.substr(found + 1);
 		std::size_t temp;
-		temp = retVal.param.find(":");
+		temp = retVal.APIName.find(":");
 		if (temp != std::string::npos){
-			//additionalNodeInfo
-			retVal.additionalNodeInfo = retVal.param.substr(temp);
-			retVal.param = retVal.param.substr(0, temp);
+			//parameter
+			retVal.parameter = retVal.APIName.substr(temp);
+			retVal.APIName = retVal.APIName.substr(0, temp);
 		}
 		str = str.substr(0, found);
 	}
@@ -3895,48 +3901,198 @@ void nsDocument::loadPolicy(std::string policyFileName){
 	}
 }
 
-bool checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::record r, nsDocument::policyEntry p){
-	bool retVal = false;
-	int i = 0;
-	if (p.rType == nsDocument::invalid) return false;
-	if (p.param != ""){
-		//test limitations first to quickly eliminate candidates
+bool 
+nsDocument::checkNodeAgainstSelector(nsIContent *root, const std::string & nodeName, const std::vector<std::string> & selectorAttrName, const std::vector<std::string> & selectorAttrValue){
+	//if nodeName doesn't match, return false
+	char *nn = ToNewUTF8String(root->NodeName());
+	if (nodeName != nn){
+		free(nn);
+		return false;
 	}
-	if (p.additionalNodeInfo != ""){
-		//test limitations first
-	}
-	//after limitations match, look at the actual resource content.
-	if (p.rType == nsDocument::special) {
-		if (r.resource != p.specialResource) return false;
-	}
-	else if (p.rType == nsDocument::absDOM){
-		if (p.mType == nsDocument::exact){
-			std::string toMatch = "";
-			for (i = 0; i < p.eleName.size(); i++){
-				toMatch = toMatch + "/" + p.eleName[i] + "[" + std::to_string(p.index[i]) + "]";
+	free(nn);
+	for (int i = 0; i < selectorAttrName.size(); i++){
+		mozilla::dom::DOMString res;
+		nsDependentString helper(std::wstring(selectorAttrName[i].begin(), selectorAttrName[i].end()).c_str(), selectorAttrName[i].length());
+		root->AsElement()->GetAttribute(helper , res);
+		res.ToString(helper);
+		char *temp = ToNewUTF8String(helper);
+		std::string curAttrValue = temp;
+		free(temp);
+		if (selectorAttrName[i] != "class"){
+			if (std::regex_match(curAttrValue, std::regex(selectorAttrValue[i]))) return false;
+		}
+		else {
+			std::istringstream iss(selectorAttrValue[i]);
+			std::vector<std::string> tokens{ std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{} };
+			for (auto t : tokens){
+				if (curAttrValue.find(t) == std::string::npos) return false;
 			}
-			if (toMatch != r.resource) return false;
 		}
-		else if (p.mType == nsDocument::subTree){
-		}
-		else{
-			//p.mType == nsDocument::root
-		}
-	}
-	else if (p.rType == nsDocument::selector){
 	}
 	return true;
 }
 
-bool checkAccessAgainstPolicies(nsIContent* root, nsIDocument::records::record r, std::vector<nsDocument::policyEntry> ps){
+bool 
+nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::record r, nsDocument::policyEntry p){
+	bool retVal = false;
+	int i = 0;
+	if (p.rType == nsDocument::invalid) return false;
+	if (p.APIName != ""){
+		//test API name limitations first to quickly eliminate candidates
+		if (p.APIName[0] == '!') {
+			std::string forbidden = p.APIName.substr(1);
+			if (forbidden.find(' ') != std::string::npos){
+				std::istringstream iss(forbidden);
+				std::vector<std::string> tokens{ std::istream_iterator < std::string > {iss}, std::istream_iterator < std::string > {} };
+				for (auto t : tokens){
+					if (r.additionalInfo == t) return false;		//Policy is given the opposite.
+				}
+			}
+			else if (r.additionalInfo == forbidden) return false;
+		}
+		else if (r.additionalInfo != p.APIName) return false;
+	}
+	if (p.parameter != ""){
+		//test parameter limitations second, but do a regex match, not a straight string comparison.
+		if (!std::regex_match(r.nodeParamInfo, std::regex(p.parameter))) return false;
+	}
+	//after limitations match, look at the actual resource content.
+	std::string toMatch = "";
+	if (p.rType == nsDocument::special) {
+		if (r.resource != p.specialResource) return false;
+	}
+	else if (p.rType == nsDocument::absDOM){
+		for (i = 0; i < p.eleName.size(); i++){
+			toMatch = toMatch + "/" + p.eleName[i] + "[" + std::to_string(p.index[i]) + "]";
+		}
+		if (p.mType == nsDocument::exact && toMatch == r.resource) return true;					//exact match
+		if (p.mType == nsDocument::root && toMatch.find(r.resource) == 0) return true;			//root match
+		if (p.mType == nsDocument::subTree && r.resource.find(toMatch) == 0) return true;		//subTree match
+		return false;		//non match
+	}
+	else if (p.rType == nsDocument::selector){
+		if (m_SelectorMaps.find(p.rawValue) == m_SelectorMaps.end()) return false;
+		for (auto toMatch : m_SelectorMaps[p.rawValue]){
+			//process the parent
+			int par = p.parent;
+			while (par > 0){
+				toMatch = toMatch.substr(0, toMatch.rfind('/'));
+				par--;
+			}
+			//append the rest of the xpath (if any)
+			for (i = 0; i < p.index.size(); i++){
+				toMatch = toMatch + "/" + p.eleName[i + 1] + "[" + std::to_string(p.index[i]) + "]";
+			}
+			//acutally compare the xpath.
+			if (p.mType == nsDocument::exact && toMatch == r.resource) return true;					//exact match
+			if (p.mType == nsDocument::root && toMatch.find(r.resource) == 0) return true;			//root match
+			if (p.mType == nsDocument::subTree && r.resource.find(toMatch) == 0) return true;		//subTree match
+		}
+		return false;
+	}
+	return false;
+}
+
+bool 
+nsDocument::checkAccessAgainstPolicies(nsIContent* root, nsIDocument::records::record r, std::vector<nsDocument::policyEntry> ps){
 	for (auto p : ps){
 		if (checkAccessAgainstPolicy(root, r, p)) return true;
 	}
 	return false;
 }
 
+void nsDocument::loadPolicies(std::string pfRoot){
+	//walk the dom tree and load all policies needed.
+	nsIContent *root = this->GetBodyElement();
+	std::stack<nsIContent *> curLevel;
+	std::stack<nsIContent *> nextLevel;
+	std::stack<nsIContent *> emptyStack;
+	curLevel.push(root);
+	while (!curLevel.empty()){
+		nsIContent *cur = curLevel.top();
+		curLevel.pop();
+		//visit this node.
+		if (cur->stackInfo.size() > 0) {
+			//visit this first
+			for (auto st : cur->stackInfo){
+				//First, check if such a policy exists. If not, ignore.
+				std::string domain = "";
+				std::string temp = st;
+				std::size_t found = temp.find("|_|");
+				if (found != std::string::npos) domain = temp.substr(0, found);
+				if (m_policies.find(domain) == m_policies.end()){
+					//attempt to find the policy
+					if (m_attemptedLoadPolicies.find(domain) != m_attemptedLoadPolicies.end()) continue;
+					else {
+						//load policy.
+						std::string pfName = pfRoot + domain + ".txt";
+						this->loadPolicy(pfName);
+						m_attemptedLoadPolicies.insert(domain);
+					}
+				}
+			}
+		}
+		nsIContent* next = cur;
+		next = next->GetFirstChild();
+		std::string nextNodeName;
+		while (next != nullptr && next != NULL){
+			nextLevel.push(next);
+			next = next->GetNextSibling();
+		}
+		if (curLevel.empty()) {
+			curLevel = nextLevel;
+			emptyStack.swap(nextLevel);		//clear next level
+		}
+	}
+}
+
+void
+nsDocument::mapSelectorToXPathVectors(nsIContent *root, const std::vector<policyEntry> & pWithSelector, std::string curXPath, int index){
+	if (root == NULL || root == nullptr) return;
+	nsString s = root->NodeName();
+	nsCString id;
+	nsIAtom* gid = root->GetID();
+	std::string idstr = "";
+	if (gid != nullptr){
+		gid->ToUTF8String(id);
+		char *f = ToNewCString(id);
+		idstr = f;
+		free(f);
+	}
+	char *nodeNameRaw = ToNewCString(s);
+	curXPath = curXPath + "/" + nodeNameRaw + "[" + std::to_string(index) + "]";
+	free(nodeNameRaw);
+	std::string resourceToRecord = curXPath;
+	std::unordered_map<std::string, int> elements;
+	for (auto p : pWithSelector){
+		if (checkNodeAgainstSelector(root, p.eleName[0], p.selectorAttrName, p.selectorAttrValue)){
+			if (m_SelectorMaps.find(p.rawValue) == m_SelectorMaps.end()){
+				std::vector<std::string> temp;
+				temp.push_back(curXPath);
+				m_SelectorMaps.insert(std::make_pair(p.rawValue, temp));
+			}
+			else{
+				m_SelectorMaps[p.rawValue].push_back(curXPath);
+			}
+		}
+	}
+	//visit all children
+	nsIContent* next = root;
+	next = next->GetFirstChild();
+	std::string nextNodeName;
+	while (next != nullptr && next != NULL){
+		char *nnn = ToNewCString(next->NodeName());
+		nextNodeName = nnn;
+		free(nnn);
+		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
+		else elements[nextNodeName] = 1;
+		mapSelectorToXPathVectors(next, pWithSelector, curXPath, elements[nextNodeName]);
+		next = next->GetNextSibling();
+	}
+}
+
 void 
-nsDocument::recursiveCheckAccessAgainstPolicies(const std::string &pfRoot, nsIContent *root, std::string curXPath, int index){
+nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, int index){
 	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	nsCString id;
@@ -3963,18 +4119,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(const std::string &pfRoot, nsICo
 				std::string temp = st;
 				std::size_t found = temp.find("|_|");
 				if (found != std::string::npos) domain = temp.substr(0, found);
-				if (m_policies.find(domain) == m_policies.end()){
-					//attempt to find the policy
-					if (m_attemptedLoadPolicies.find(domain) != m_attemptedLoadPolicies.end()) continue;
-					else {
-						//load policy.
-						std::string pfName = pfRoot + domain + ".txt";
-						this->loadPolicy(pfName);
-						m_attemptedLoadPolicies.insert(domain);
-					}
-					//find again
-					if (m_policies.find(domain) != m_policies.end()) continue;
-				}
+				if (m_policies.find(domain) == m_policies.end()) continue;
 				//extract further access information from the node.
 				std::string nodeParamInfo = "";
 				temp = temp.substr(found + 3);
@@ -4012,7 +4157,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(const std::string &pfRoot, nsICo
 		free(nnn);
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		recursiveCheckAccessAgainstPolicies(pfRoot, next, curXPath, elements[nextNodeName]);
+		recursiveCheckAccessAgainstPolicies(next, curXPath, elements[nextNodeName]);
 		next = next->GetNextSibling();
 	}
 }
@@ -4025,7 +4170,19 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	free(cs);
 	std::string s = "";
 	if (hostURI.substr(0, 4) != "http") return s;
-	recursiveCheckAccessAgainstPolicies(pfRoot, this->GetBodyElement(), "", 1);
+	loadPolicies(pfRoot);
+	//walk all policies to extract all selectors.
+	std::vector<policyEntry> pWithSelector;
+	for (auto ps : m_policies){
+		//ps.second is std::vector<policyEntry>
+		for (auto p : ps.second){
+			if (p.rType == nsDocument::selector){
+				pWithSelector.push_back(p);
+			}
+		}
+	}
+	mapSelectorToXPathVectors(this->GetBodyElement(), pWithSelector, "", 1);
+	recursiveCheckAccessAgainstPolicies(this->GetBodyElement(), "", 1);
 
 	for (auto domain : m_violatedRecords){
 		for (auto ra_r : domain.second.ra_r){
