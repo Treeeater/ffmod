@@ -73,6 +73,10 @@
 #include "jsfriendapi.h"
 #include "ImportManager.h"
 
+#include <fstream>
+#include <set>
+#include <map>
+
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
 #define XML_DECLARATION_BITS_STANDALONE_EXISTS    (1 << 2)
@@ -680,6 +684,49 @@ public:
   void collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool shouldRemove = true);
   void collectDOMAccess(nsIContent *root);
   void clearDOMAccess();
+  enum repType { invalid, special, absDOM, selector };
+  enum matchingType { exact, subTree, root };
+
+  class policyEntry{
+  public:
+	  std::string specialResource;
+	  std::string APIName;
+	  std::string parameter;
+	  int parent;						//For DOM representation, parent = 0 means no parent, parent = n means n levels above current node.
+	  std::vector<std::string> eleName;		//For DOM rep /html[1]/body[1]/div[2], xpath shud store {html, body, div}
+	  std::vector<int> index;				//For DOM rep /html[1]/body[1]/div[2], xpath shud store {1, 1, 2}
+	  std::vector<std::string> selectorAttrName;	//For selector rep //script[@id='sdf' and @class='fff'] this array should be {'id', 'class'}
+	  std::vector<std::string> selectorAttrValue;	//shud be {'sdf', 'fff'}
+	  std::string rawValue;				//store the original raw policy string read from the file.
+
+	  repType rType;
+	  matchingType mType;
+
+	  policyEntry(){
+		  specialResource = "";
+		  APIName = "";
+		  parameter = "";
+		  rType = invalid;
+		  mType = exact;
+		  parent = 0;
+		  rawValue = "";
+	  }
+  };
+
+  policyEntry parsePolicy(std::string str);
+  void loadPolicy(std::string policyFileName);
+  void loadPolicies(std::string pfRoot);		//preload all policies based on the access of the nodes.
+  void mapSelectorToXPathVectors(nsIContent *root, const std::vector<policyEntry> & pWithSelector, std::string curXPath, int index);
+  bool checkNodeAgainstSelector(nsIContent *root, const std::string & nodeName, const std::vector<std::string> & selectorAttrName, const std::vector<std::string> & selectorAttrValue);
+  std::string checkPolicyAndOutputToString(std::string pfRoot);
+  void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index);
+  bool checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::record r, nsDocument::policyEntry p);
+  bool checkAccessAgainstPolicies(nsIContent* root, nsIDocument::records::record r, std::vector<nsDocument::policyEntry> ps);
+  std::string policyFolderBase;
+  std::map<std::string, std::vector<policyEntry>> m_policies;
+  std::map<std::string, nsIDocument::records> m_violatedRecords;
+  std::set<std::string> m_attemptedLoadPolicies;
+  std::map<std::string, std::vector<std::string>> m_SelectorMaps;
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_SIZEOF_EXCLUDING_THIS

@@ -1737,6 +1737,47 @@ nsHTMLDocument::VisualizerOutputToStringAdd(nsAString &_retval)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLDocument::CheckPolicyToString(const nsAString& policyFolder, nsAString& _retval){
+	char *pfRawStr = ToNewUTF8String(policyFolder);
+	std::string pfRoot(pfRawStr);
+	if (pfRoot != "" && pfRoot[pfRoot.length() - 1] != '/') pfRoot = pfRoot + "/";			//make sure the last char is /
+	if (pfRoot == "") pfRoot = "/Dropbox/zyc/Research/visualizer/policies/";				//default folder name
+	free(pfRawStr);
+	this->clearDOMAccess();
+	std::string s = checkPolicyAndOutputToString(pfRoot);
+	_retval = std::wstring(s.begin(), s.end()).c_str();
+	return NS_OK;
+}
+
+std::string sanitizeFileName(std::string s){
+	s.erase(std::remove_if(s.begin(), s.end(), my_predicate), s.end());
+	return s;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::CheckPolicyToFile(const nsAString& policyFolder){
+	char *pfRawStr = ToNewUTF8String(policyFolder);
+	std::string pfRoot(pfRawStr);
+	if (pfRoot != "" && pfRoot[pfRoot.length() - 1] != '/') pfRoot = pfRoot + "/";			//make sure the last char is /
+	if (pfRoot == "") pfRoot = "/Dropbox/zyc/Research/visualizer/policies/";				//default folder name
+	free(pfRawStr);
+	this->clearDOMAccess();
+	std::string s = checkPolicyAndOutputToString(pfRoot);
+	nsString ss;
+	this->GetURL(ss);
+	char *cs = ToNewUTF8String(ss);
+	std::string hostURI(cs);
+	free(cs);
+	std::string fileName = sanitizeFileName(hostURI).substr(0, 32) + ".txt";
+	std::ofstream myfile;
+	myfile.open(fileName, std::ios::out | std::ios::app);
+	myfile << s;
+	myfile.close();
+	return NS_OK;
+}
+
+
 void
 nsHTMLDocument::Close(ErrorResult& rv)
 {

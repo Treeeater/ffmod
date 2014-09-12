@@ -71,11 +71,15 @@ interface HTMLDocument : Document {
   readonly attribute HTMLCollection applets;
 
   void clear();
+  
   void visualizerOutputToFile();
   void visualizerOutputToFileAdd();
+  void checkPolicyToFile(optional DOMString value = "");
+  
   DOMString visualizerOutputToString();
   DOMString visualizerOutputToStringAdd();
-
+  DOMString checkPolicyToString(optional DOMString value = "");
+  
   readonly attribute HTMLAllCollection all;
 
   // https://dvcs.w3.org/hg/editing/raw-file/tip/editing.html#selections
