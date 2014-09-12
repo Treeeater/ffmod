@@ -3841,7 +3841,7 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 		temp = retVal.APIName.find(":");
 		if (temp != std::string::npos){
 			//parameter
-			retVal.parameter = retVal.APIName.substr(temp);
+			retVal.parameter = retVal.APIName.substr(temp + 1);
 			retVal.APIName = retVal.APIName.substr(0, temp);
 		}
 		str = str.substr(0, found);
@@ -3912,14 +3912,15 @@ nsDocument::checkNodeAgainstSelector(nsIContent *root, const std::string & nodeN
 	free(nn);
 	for (int i = 0; i < selectorAttrName.size(); i++){
 		mozilla::dom::DOMString res;
-		nsDependentString helper(std::wstring(selectorAttrName[i].begin(), selectorAttrName[i].end()).c_str(), selectorAttrName[i].length());
+		nsDependentString helper;
+		helper.AssignASCII(selectorAttrName[i].c_str());
 		root->AsElement()->GetAttribute(helper , res);
 		res.ToString(helper);
 		char *temp = ToNewUTF8String(helper);
 		std::string curAttrValue = temp;
 		free(temp);
 		if (selectorAttrName[i] != "class"){
-			if (std::regex_match(curAttrValue, std::regex(selectorAttrValue[i]))) return false;
+			if (!std::regex_match(curAttrValue, std::regex(selectorAttrValue[i]))) return false;
 		}
 		else {
 			std::istringstream iss(selectorAttrValue[i]);
@@ -4006,7 +4007,6 @@ void nsDocument::loadPolicies(std::string pfRoot){
 	nsIContent *root = this->GetBodyElement();
 	std::stack<nsIContent *> curLevel;
 	std::stack<nsIContent *> nextLevel;
-	std::stack<nsIContent *> emptyStack;
 	curLevel.push(root);
 	while (!curLevel.empty()){
 		nsIContent *cur = curLevel.top();
@@ -4041,6 +4041,7 @@ void nsDocument::loadPolicies(std::string pfRoot){
 		}
 		if (curLevel.empty()) {
 			curLevel = nextLevel;
+			std::stack<nsIContent *> emptyStack;
 			emptyStack.swap(nextLevel);		//clear next level
 		}
 	}
@@ -4163,6 +4164,8 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 }
 
 std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
+	//Clear m_violatedRecords before starting
+	m_violatedRecords.clear();
 	nsString ss;
 	this->GetURL(ss);
 	char *cs = ToNewUTF8String(ss);
@@ -4185,9 +4188,10 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	recursiveCheckAccessAgainstPolicies(this->GetBodyElement(), "", 1);
 
 	for (auto domain : m_violatedRecords){
+		s += "tpd: " + domain.first + ":\n";
 		for (auto ra_r : domain.second.ra_r){
 			//violation of policies, output to string.
-			s += "_t: " + std::to_string(ra_r.second.time) + "\n";
+			//s += "_t: " + std::to_string(ra_r.second.time) + "\n";		//ra_r.second.time is undefined here.
 			s += "_r: " + ra_r.second.resource + "\n";
 			s += "_a: " + ra_r.second.additionalInfo + "\n";
 			if (ra_r.second.nodeParamInfo != "") s += "_n: " + ra_r.second.nodeParamInfo + "\n";
