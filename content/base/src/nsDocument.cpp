@@ -3963,15 +3963,19 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 		if (r.resource != p.specialResource) return false;
 	}
 	else if (p.rType == nsDocument::absDOM){
+		std::string res = r.resource;
+		if (res.find('|') != std::string::npos) res = res.substr(0, res.find('|'));			//we are only concerned with the abs xpath here.
 		for (i = 0; i < p.eleName.size(); i++){
 			toMatch = toMatch + "/" + p.eleName[i] + "[" + std::to_string(p.index[i]) + "]";
 		}
-		if (p.mType == nsDocument::exact && toMatch == r.resource) return true;					//exact match
-		if (p.mType == nsDocument::root && toMatch.find(r.resource) == 0) return true;			//root match
-		if (p.mType == nsDocument::subTree && r.resource.find(toMatch) == 0) return true;		//subTree match
+		if (p.mType == nsDocument::exact && toMatch == res) return true;					//exact match
+		if (p.mType == nsDocument::root && toMatch.find(res) == 0) return true;			//root match
+		if (p.mType == nsDocument::subTree && res.find(toMatch) == 0) return true;		//subTree match
 		return false;		//non match
 	}
 	else if (p.rType == nsDocument::selector){
+		std::string res = r.resource;
+		if (res.find('|') != std::string::npos) res = res.substr(0, res.find('|'));			//we are only concerned with the abs xpath here.
 		if (m_SelectorMaps.find(p.rawValue) == m_SelectorMaps.end()) return false;
 		for (auto toMatch : m_SelectorMaps[p.rawValue]){
 			//process the parent
@@ -3985,9 +3989,9 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 				toMatch = toMatch + "/" + p.eleName[i + 1] + "[" + std::to_string(p.index[i]) + "]";
 			}
 			//acutally compare the xpath.
-			if (p.mType == nsDocument::exact && toMatch == r.resource) return true;					//exact match
-			if (p.mType == nsDocument::root && toMatch.find(r.resource) == 0) return true;			//root match
-			if (p.mType == nsDocument::subTree && r.resource.find(toMatch) == 0) return true;		//subTree match
+			if (p.mType == nsDocument::exact && toMatch == res) return true;					//exact match
+			if (p.mType == nsDocument::root && toMatch.find(res) == 0) return true;			//root match
+			if (p.mType == nsDocument::subTree && res.find(toMatch) == 0) return true;		//subTree match
 		}
 		return false;
 	}
@@ -4093,7 +4097,7 @@ nsDocument::mapSelectorToXPathVectors(nsIContent *root, const std::vector<policy
 }
 
 void 
-nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, int index){
+nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index){
 	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	nsCString id;
@@ -4107,8 +4111,12 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 	}
 	char *nodeNameRaw = ToNewCString(s);
 	curXPath = curXPath + "/" + nodeNameRaw + "[" + std::to_string(index) + "]";
+	if (idstr != "") { xpathWID = std::string("//") + nodeNameRaw + "[@id='" + idstr + "']"; }
+	else { xpathWID = xpathWID + "/" + nodeNameRaw + "[" + std::to_string(index) + "]"; }
 	free(nodeNameRaw);
-	std::string resourceToRecord = curXPath;
+	std::string resourceToRecord;
+	if (xpathWID == curXPath || (xpathWID.length()>1 && xpathWID[1] != '/')) resourceToRecord = curXPath;
+	else resourceToRecord = curXPath + "|" + xpathWID;
 	std::unordered_map<std::string, int> elements;
 	try {
 		if (root->stackInfo.size() > 0) {
@@ -4158,7 +4166,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 		free(nnn);
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		recursiveCheckAccessAgainstPolicies(next, curXPath, elements[nextNodeName]);
+		recursiveCheckAccessAgainstPolicies(next, curXPath, xpathWID, elements[nextNodeName]);
 		next = next->GetNextSibling();
 	}
 }
@@ -4185,7 +4193,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 		}
 	}
 	mapSelectorToXPathVectors(this->GetBodyElement(), pWithSelector, "", 1);
-	recursiveCheckAccessAgainstPolicies(this->GetBodyElement(), "", 1);
+	recursiveCheckAccessAgainstPolicies(this->GetBodyElement(), "", "", 1);
 
 	for (auto domain : m_violatedRecords){
 		s += "tpd: " + domain.first + ":\n";
