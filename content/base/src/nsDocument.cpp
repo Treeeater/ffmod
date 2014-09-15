@@ -3758,6 +3758,9 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 	if (str.length() == 0) return retVal;
 	if (str[0] != '/' && str[0] != '^' && str.substr(0, 4) != "sub:" && str.substr(0, 5) != "root:"){
 		//special entry
+		if (str.length() >= 22 && str.substr(0, 22) == "document.write called:") {
+			retVal.parameter = str.substr(22);
+		}
 		retVal.specialResource = str;
 		retVal.mType = exact;
 		retVal.rType = special;
@@ -3825,9 +3828,13 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 			}
 			str = str.substr(1);		//skip ]
 		}
-		else {
+		else if (str[found] == '/'){
 			retVal.eleName.push_back(str.substr(0, found));
 			str = str.substr(found);
+		}
+		else{
+			//str[found] == '>', this means //>GetAttribute:sdf, allowing this API to be called on every node
+			//nothing needs to be done here, when checking policy, we check if eleName.length == 0
 		}
 	}
 	if (str.length() > 0 && str[0] == '/') str = str.substr(1);		//skip /
@@ -3864,7 +3871,7 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 		else if (state == 1){
 			f = str.find(']');
 			if (f != std::string::npos){
-				retVal.index.push_back(std::stoi(str.substr(0, f)));
+				retVal.index.push_back(str.substr(0, f));
 				str = str.substr(f + 1);
 				if (str.length() > 0 && str[0] == '/') str = str.substr(1);
 				state = 0;
@@ -3959,14 +3966,29 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 	}
 	//after limitations match, look at the actual resource content.
 	std::string toMatch = "";
-	if (p.rType == nsDocument::special) {
-		if (r.resource != p.specialResource) return false;
+	if (p.eleName.size() == 0) {
+		//the policy is of the form: //>APIName. We have checked all the limitations, now simply return true.
+		return true;
 	}
 	else if (p.rType == nsDocument::absDOM){
 		std::string res = r.resource;
 		if (res.find('|') != std::string::npos) res = res.substr(0, res.find('|'));			//we are only concerned with the abs xpath here.
 		for (i = 0; i < p.eleName.size(); i++){
-			toMatch = toMatch + "/" + p.eleName[i] + "[" + std::to_string(p.index[i]) + "]";
+			toMatch = toMatch + "/" + p.eleName[i] + "[" + p.index[i] + "]";
+		}
+		//convert /BODY/SCRIPT[*] to /BODY/SCRIPT[] AND SIMULATENOUSLY also convert the res to this format.
+		std::size_t found = toMatch.find('*');
+		while (found != std::string::npos){
+			if (res.length() <= found + 1) return false;
+			std::string firstHalf = toMatch.substr(0, found);
+			if (firstHalf != res.substr(0, found)) return false;
+			std::string secondHalf = toMatch.substr(found + 1);
+			toMatch = firstHalf + secondHalf;
+			secondHalf = res.substr(found + 1);
+			if (secondHalf.find(']') == std::string::npos) return false;
+			secondHalf = secondHalf.substr(secondHalf.find(']'));
+			res = firstHalf + secondHalf;
+			found = toMatch.find('*');
 		}
 		if (p.mType == nsDocument::exact && toMatch == res) return true;					//exact match
 		if (p.mType == nsDocument::root && toMatch.find(res) == 0) return true;			//root match
@@ -3986,7 +4008,21 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 			}
 			//append the rest of the xpath (if any)
 			for (i = 0; i < p.index.size(); i++){
-				toMatch = toMatch + "/" + p.eleName[i + 1] + "[" + std::to_string(p.index[i]) + "]";
+				toMatch = toMatch + "/" + p.eleName[i + 1] + "[" + p.index[i] + "]";
+			}
+			//convert /BODY/SCRIPT[*] to /BODY/SCRIPT[] AND SIMULATENOUSLY also convert the res to this format.
+			std::size_t found = toMatch.find('*');
+			while (found != std::string::npos){
+				if (res.length() <= found + 1) return false;
+				std::string firstHalf = toMatch.substr(0, found);
+				if (firstHalf != res.substr(0, found)) return false;
+				std::string secondHalf = toMatch.substr(found + 1);
+				toMatch = firstHalf + secondHalf;
+				secondHalf = res.substr(found + 1);
+				if (secondHalf.find(']') == std::string::npos) return false;
+				secondHalf = secondHalf.substr(secondHalf.find(']'));
+				res = firstHalf + secondHalf;
+				found = toMatch.find('*');
 			}
 			//acutally compare the xpath.
 			if (p.mType == nsDocument::exact && toMatch == res) return true;					//exact match
@@ -3995,6 +4031,7 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 		}
 		return false;
 	}
+	//Special policies are not checked here, they are checked in non-dom node traversals (nsIDocument::m_Records)
 	return false;
 }
 
@@ -4181,6 +4218,10 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	free(cs);
 	std::string s = "";
 	if (hostURI.substr(0, 4) != "http") return s;
+	m_policies.clear();
+	m_violatedRecords.clear();
+	m_attemptedLoadPolicies.clear();
+	m_SelectorMaps.clear();
 	loadPolicies(pfRoot);
 	//walk all policies to extract all selectors.
 	std::vector<policyEntry> pWithSelector;
@@ -4194,7 +4235,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	}
 	mapSelectorToXPathVectors(this->GetBodyElement(), pWithSelector, "", 1);
 	recursiveCheckAccessAgainstPolicies(this->GetBodyElement(), "", "", 1);
-
+	s += "URL: " + hostURI + "\n---\n";
 	for (auto domain : m_violatedRecords){
 		s += "tpd: " + domain.first + ":\n";
 		for (auto ra_r : domain.second.ra_r){
@@ -4203,6 +4244,26 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 			s += "_r: " + ra_r.second.resource + "\n";
 			s += "_a: " + ra_r.second.additionalInfo + "\n";
 			if (ra_r.second.nodeParamInfo != "") s += "_n: " + ra_r.second.nodeParamInfo + "\n";
+		}
+		//then check all special accesses
+		for (auto ra_r : this->mRecords[domain.first].ra_r){
+			std::string res = ra_r.second.resource;
+			if (res[0] == '/') continue;			//not a special access
+			bool shouldOutput = true;
+			for (auto p : this->m_policies[domain.first]){
+				if (res == "document.write called" && res == p.specialResource && std::regex_match(ra_r.second.additionalInfo, std::regex(p.parameter))){
+					shouldOutput = false;
+					break;
+				}
+				if (res != "document.write called" && res == p.specialResource) {
+					shouldOutput = false;
+					break;
+				}
+			}
+			if (shouldOutput){
+				s += "_r: " + ra_r.second.resource + "\n";
+				s += "_a: " + ra_r.second.additionalInfo + "\n";
+			}
 		}
 		s += "---\n";
 	}

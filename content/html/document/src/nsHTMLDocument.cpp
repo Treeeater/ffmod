@@ -1865,7 +1865,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
 	if (cx != NULL) {
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 		char *cs = ToNewUTF8String(aText);
-		this->recordAccess("document.write called", f, "String: " + std::string(cs));
+		this->recordAccess("document.write called", f, std::string(cs));
 		free(cs);
 		free(f);
 	}
