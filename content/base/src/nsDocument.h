@@ -694,7 +694,7 @@ public:
 	  std::string parameter;
 	  int parent;						//For DOM representation, parent = 0 means no parent, parent = n means n levels above current node.
 	  std::vector<std::string> eleName;		//For DOM rep /html[1]/body[1]/div[2], xpath shud store {html, body, div}
-	  std::vector<int> index;				//For DOM rep /html[1]/body[1]/div[2], xpath shud store {1, 1, 2}
+	  std::vector<std::string> index;				//For DOM rep /html[1]/body[1]/div[2], xpath shud store {1, 1, 2}
 	  std::vector<std::string> selectorAttrName;	//For selector rep //script[@id='sdf' and @class='fff'] this array should be {'id', 'class'}
 	  std::vector<std::string> selectorAttrValue;	//shud be {'sdf', 'fff'}
 	  std::string rawValue;				//store the original raw policy string read from the file.
@@ -722,7 +722,6 @@ public:
   void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index);
   bool checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::record r, nsDocument::policyEntry p);
   bool checkAccessAgainstPolicies(nsIContent* root, nsIDocument::records::record r, std::vector<nsDocument::policyEntry> ps);
-  std::string policyFolderBase;
   std::map<std::string, std::vector<policyEntry>> m_policies;
   std::map<std::string, nsIDocument::records> m_violatedRecords;
   std::set<std::string> m_attemptedLoadPolicies;
