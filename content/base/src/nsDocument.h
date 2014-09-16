@@ -721,11 +721,12 @@ public:
   std::string checkPolicyAndOutputToString(std::string pfRoot);
   void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index);
   bool checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::record r, nsDocument::policyEntry p);
-  bool checkAccessAgainstPolicies(nsIContent* root, nsIDocument::records::record r, std::vector<nsDocument::policyEntry> ps);
+  bool checkAccessAgainstPolicies(nsIContent* root, nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr);
   std::map<std::string, std::vector<policyEntry>> m_policies;
   std::map<std::string, nsIDocument::records> m_violatedRecords;
   std::set<std::string> m_attemptedLoadPolicies;
   std::map<std::string, std::vector<std::string>> m_SelectorMaps;
+  std::map<std::string, std::map<std::string, nsIDocument::records>> m_matchedRecords;
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_SIZEOF_EXCLUDING_THIS
