@@ -3834,7 +3834,12 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 			str = str.substr(found);
 		}
 		else{
-			//str[found] == '>', this means //>GetAttribute:sdf, allowing this API to be called on every node
+			//str[found] == '>', this means //DIV>apiname:apiparam
+			if (found > 0){
+				retVal.eleName.push_back(str.substr(0, found));
+				str = str.substr(found);
+			}
+			//or //>GetAttribute:sdf, allowing this API to be called on every node
 			//nothing needs to be done here, when checking policy, we check if eleName.length == 0
 		}
 	}
@@ -3945,7 +3950,7 @@ bool
 nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::record r, nsDocument::policyEntry p){
 	bool retVal = false;
 	int i = 0;
-	if (p.rType == nsDocument::invalid) return false;
+	if (p.rType == nsDocument::invalid || p.rType == nsDocument::special) return false;
 	if (p.APIName != ""){
 		//test API name limitations first to quickly eliminate candidates
 		if (p.APIName[0] == '!') {
@@ -3967,7 +3972,7 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 	}
 	//after limitations match, look at the actual resource content.
 	std::string toMatch = "";
-	if (p.eleName.size() == 0) {
+	if (p.eleName.size() == 0 && p.rType == nsDocument::selector) {
 		//the policy is of the form: //>APIName. We have checked all the limitations, now simply return true.
 		return true;
 	}
@@ -4252,6 +4257,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	s += "URL: " + hostURI + "\n---\n";
 	for (auto domain : mRecords){
 		//then check all special accesses
+		if (this->m_policies.find(domain.first) == this->m_policies.end()) continue;
 		for (auto ra_r : this->mRecords[domain.first].ra_r){
 			std::string res = ra_r.second.resource;
 			if (res[0] == '/') continue;			//not a special access
