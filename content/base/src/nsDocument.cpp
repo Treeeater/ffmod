@@ -3758,10 +3758,11 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 	if (str.length() == 0) return retVal;
 	if (str[0] != '/' && str[0] != '^' && str.substr(0, 4) != "sub:" && str.substr(0, 5) != "root:"){
 		//special entry
+		retVal.specialResource = str;
 		if (str.length() >= 22 && str.substr(0, 22) == "document.write called:") {
 			retVal.parameter = str.substr(22);
+			retVal.specialResource = "document.write called";
 		}
-		retVal.specialResource = str;
 		retVal.mType = exact;
 		retVal.rType = special;
 		return retVal;
@@ -4086,6 +4087,19 @@ void nsDocument::loadPolicies(std::string pfRoot){
 			emptyStack.swap(nextLevel);		//clear next level
 		}
 	}
+	//load special property policies
+	for (auto domain : this->mRecords){
+		if (m_policies.find(domain.first) == m_policies.end()){
+			//attempt to find the policy
+			if (m_attemptedLoadPolicies.find(domain.first) != m_attemptedLoadPolicies.end()) continue;
+			else {
+				//load policy.
+				std::string pfName = pfRoot + domain.first + ".txt";
+				this->loadPolicy(pfName);
+				m_attemptedLoadPolicies.insert(domain.first);
+			}
+		}
+	}
 }
 
 void
@@ -4228,7 +4242,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	for (auto ps : m_policies){
 		//ps.second is std::vector<policyEntry>
 		for (auto p : ps.second){
-			if (p.rType == nsDocument::selector){
+			if (p.rType == nsDocument::selector && p.eleName.size() >= 1){		//ignore //> cases.
 				pWithSelector.push_back(p);
 			}
 		}
@@ -4236,15 +4250,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	mapSelectorToXPathVectors(this->GetBodyElement(), pWithSelector, "", 1);
 	recursiveCheckAccessAgainstPolicies(this->GetBodyElement(), "", "", 1);
 	s += "URL: " + hostURI + "\n---\n";
-	for (auto domain : m_violatedRecords){
-		s += "tpd: " + domain.first + ":\n";
-		for (auto ra_r : domain.second.ra_r){
-			//violation of policies, output to string.
-			//s += "_t: " + std::to_string(ra_r.second.time) + "\n";		//ra_r.second.time is undefined here.
-			s += "_r: " + ra_r.second.resource + "\n";
-			s += "_a: " + ra_r.second.additionalInfo + "\n";
-			if (ra_r.second.nodeParamInfo != "") s += "_n: " + ra_r.second.nodeParamInfo + "\n";
-		}
+	for (auto domain : mRecords){
 		//then check all special accesses
 		for (auto ra_r : this->mRecords[domain.first].ra_r){
 			std::string res = ra_r.second.resource;
@@ -4261,9 +4267,25 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 				}
 			}
 			if (shouldOutput){
-				s += "_r: " + ra_r.second.resource + "\n";
-				s += "_a: " + ra_r.second.additionalInfo + "\n";
+				if (m_violatedRecords.find(domain.first) == m_violatedRecords.end()){
+					records recs;
+					recs.ra_r.insert(ra_r); 
+					m_violatedRecords.insert(std::pair<std::string, records>(domain.first, recs));
+				}
+				else{
+					m_violatedRecords[domain.first].ra_r.insert(ra_r);
+				}
 			}
+		}
+	}
+	for (auto domain : m_violatedRecords){
+		s += "tpd: " + domain.first + ":\n";
+		for (auto ra_r : domain.second.ra_r){
+			//violation of policies, output to string.
+			//s += "_t: " + std::to_string(ra_r.second.time) + "\n";		//ra_r.second.time is undefined here.
+			s += "_r: " + ra_r.second.resource + "\n";
+			s += "_a: " + ra_r.second.additionalInfo + "\n";
+			if (ra_r.second.nodeParamInfo != "") s += "_n: " + ra_r.second.nodeParamInfo + "\n";
 		}
 		s += "---\n";
 	}
