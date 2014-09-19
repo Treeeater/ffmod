@@ -1862,9 +1862,11 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
                             const nsAString& aText,
                             bool aNewlineTerminate)
 {
+	std::string stack = "";
 	if (cx != NULL) {
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 		char *cs = ToNewUTF8String(aText);
+		stack = f;
 		this->recordAccess("document.write called", f, std::string(cs));
 		free(cs);
 		free(f);
@@ -1944,6 +1946,13 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
 
   ++mWriteLevel;
 
+  std::unordered_set<std::string> oldStack;
+  if (stack != "" && this->GetRootElement() != nullptr && this->GetRootElement() != NULL){
+	  oldStack = this->currentStack;
+	  for (auto s : (reinterpret_cast<nsGenericHTMLElement *>(this->GetRootElement()))->convStackToSet(stack)){
+		  this->currentStack.insert(s);
+	  }
+  }
   // This could be done with less code, but for performance reasons it
   // makes sense to have the code for two separate Parse() calls here
   // since the concatenation of strings costs more than we like. And
@@ -1955,7 +1964,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     rv = (static_cast<nsHtml5Parser*>(mParser.get()))->Parse(
       aText, key, GetContentTypeInternal(), false);
   }
-
+  if (stack != "" && this->GetRootElement() != nullptr && this->GetRootElement() != NULL) this->currentStack = oldStack;
   --mWriteLevel;
 
   mTooDeepWriteRecursion = (mWriteLevel != 0 && mTooDeepWriteRecursion);

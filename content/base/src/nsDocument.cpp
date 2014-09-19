@@ -3756,7 +3756,16 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 	nsDocument::policyEntry invalidPolicy;
 	retVal.rawValue = str;
 	if (str.length() == 0) return retVal;
-	if (str[0] != '/' && str[0] != '^' && str.substr(0, 4) != "sub:" && str.substr(0, 5) != "root:"){
+	//DOM entry
+	if (str.substr(0, 4) == "sub:") {
+		str = str.substr(4);
+		retVal.mType = subTree;
+	}
+	if (str.substr(0, 5) == "root:"){
+		str = str.substr(5);
+		retVal.mType = root;
+	}
+	if (str[0] != '/' && str[0] != '^' && str.substr(0,3) != "[o]"){
 		//special entry
 		retVal.specialResource = str;
 		if (str.length() >= 22 && str.substr(0, 22) == "document.write called:") {
@@ -3767,15 +3776,9 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 		retVal.rType = special;
 		return retVal;
 	}
-
-	//DOM entry
-	if (str.substr(0, 4) == "sub:") {
-		str = str.substr(4);
-		retVal.mType = subTree;
-	}
-	if (str.substr(0, 5) == "root:"){
-		str = str.substr(5);
-		retVal.mType = root;
+	if (str.substr(0, 3) == "[o]"){
+		retVal.own = true;
+		str = str.substr(3);
 	}
 	while (str[0] == '^'){
 		retVal.parent++;
@@ -3970,6 +3973,12 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 		//test parameter limitations second, but do a regex match, not a straight string comparison.
 		if (!std::regex_match(r.nodeParamInfo, std::regex(p.parameter))) return false;
 	}
+	//check owner match
+	std::string res = r.resource;
+	if (p.own && res.substr(0, 3) != "[o]") {
+		return false;
+	}
+	if (res.substr(0, 3) == "[o]") res = res.substr(3);
 	//after limitations match, look at the actual resource content.
 	std::string toMatch = "";
 	if (p.eleName.size() == 0 && p.rType == nsDocument::selector) {
@@ -3977,7 +3986,6 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 		return true;
 	}
 	else if (p.rType == nsDocument::absDOM){
-		std::string res = r.resource;
 		if (res.find('|') != std::string::npos) res = res.substr(0, res.find('|'));			//we are only concerned with the abs xpath here.
 		for (i = 0; i < p.eleName.size(); i++){
 			toMatch = toMatch + "/" + p.eleName[i] + "[" + p.index[i] + "]";
@@ -4002,7 +4010,6 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 		return false;		//non match
 	}
 	else if (p.rType == nsDocument::selector){
-		std::string res = r.resource;
 		if (res.find('|') != std::string::npos) res = res.substr(0, res.find('|'));			//we are only concerned with the abs xpath here.
 		if (m_SelectorMaps.find(p.rawValue) == m_SelectorMaps.end()) return false;
 		for (auto toMatch : m_SelectorMaps[p.rawValue]){
@@ -4177,6 +4184,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 	if (xpathWID == curXPath || (xpathWID.length()>1 && xpathWID[1] != '/')) resourceToRecord = curXPath;
 	else resourceToRecord = curXPath + "|" + xpathWID;
 	std::unordered_map<std::string, int> elements;
+	std::string resourceToRecordWOwner = resourceToRecord;
 	policyEntry *pPtr = nullptr;
 	try {
 		if (root->stackInfo.size() > 0) {
@@ -4198,24 +4206,25 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 					record = temp.substr(0, a);
 					nodeParamInfo = temp.substr(a + 4);
 				}
-				nsIDocument::records::record rec(resourceToRecord, record, nodeParamInfo);
+				if (root->node3POwners.find(domain) != root->node3POwners.end()) resourceToRecordWOwner = "[o]" + resourceToRecord;
+				nsIDocument::records::record rec(resourceToRecordWOwner, record, nodeParamInfo);
 				pPtr = nullptr;
 				//compare against policy
 				if (!checkAccessAgainstPolicies(root, rec, domain, pPtr)){
 					//violation of policies, output to string.
 					if (m_violatedRecords.find(domain) == m_violatedRecords.end()){
 						records recs;
-						recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
+						recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
 						m_violatedRecords.insert(std::pair<std::string, records>(domain, recs));
 					}
 					else {
-						m_violatedRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
+						m_violatedRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
 					}
 				}
 				else{
 					if (m_matchedRecords.find(domain) == m_matchedRecords.end()){
 						records recs;
-						recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
+						recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
 						std::map<std::string, nsIDocument::records> pc;
 						pc.insert(std::pair<std::string, records>(pPtr->rawValue, recs));
 						m_matchedRecords.insert(std::pair<std::string, std::map<std::string, nsIDocument::records>>(domain, pc));
@@ -4223,11 +4232,11 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 					else{
 						if (m_matchedRecords[domain].find(pPtr->rawValue) == m_matchedRecords[domain].end()){
 							records recs;
-							recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
+							recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
 							m_matchedRecords[domain].insert(std::pair<std::string, records>(pPtr->rawValue, recs));
 						}
 						else{
-							m_matchedRecords[domain][pPtr->rawValue].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
+							m_matchedRecords[domain][pPtr->rawValue].ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
 						}
 					}
 				}
@@ -4286,7 +4295,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 		if (this->m_policies.find(domain.first) == this->m_policies.end()) continue;
 		for (auto ra_r : this->mRecords[domain.first].ra_r){
 			std::string res = ra_r.second.resource;
-			if (res[0] == '/') continue;			//not a special access
+			if (res[0] == '/' || res.substr(0,3) == "[o]") continue;			//not a special access
 			bool shouldOutput = true;
 			for (auto p : this->m_policies[domain.first]){
 				if (res == "document.write called" && res == p.specialResource && std::regex_match(ra_r.second.additionalInfo, std::regex(p.parameter))){
@@ -4383,6 +4392,7 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 	std::string resourceToRecord;
 	if (xpathWID == curXPath || (xpathWID.length()>1 && xpathWID[1]!='/')) resourceToRecord = curXPath;
 	else resourceToRecord = curXPath + "|" + xpathWID;
+	std::string resourceToRecordWOwner = resourceToRecord;
 	std::unordered_map<std::string, int> elements;
 	try {
 		if (root->stackInfo.size() > 0) {
@@ -4401,15 +4411,16 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 					record = temp.substr(0, a);
 					nodeParamInfo = temp.substr(a + 4);
 				}
-				records::record rec(resourceToRecord, record, nodeParamInfo);
+				if (root->node3POwners.find(domain) != root->node3POwners.end()) resourceToRecordWOwner = "[o]" + resourceToRecord;
+				records::record rec(resourceToRecordWOwner, record, nodeParamInfo);
 				rec.shouldRemove = shouldRemove;
 				if (mRecords.find(domain) == mRecords.end()){
 					records recs;
-					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
+					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
 					mRecords.insert(std::pair<std::string, records>(domain, recs));
 				}
 				else {
-					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
+					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
 				}
 			}
 		}
@@ -5918,6 +5929,27 @@ nsIDocument::CreateElement(const nsAString& aTagName, ErrorResult& rv)
   return dont_AddRef(content.forget().take()->AsElement());
 }
 
+already_AddRefed<Element>
+nsIDocument::CreateElement(JSContext *cx, const nsAString& aTagName, ErrorResult& rv){
+	std::unordered_set<std::string> oldStack;
+	bool stackValid = false;
+	nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(this);
+	if (cx != NULL){
+		if (temp->OwnerDoc() != NULL){
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			oldStack = this->currentStack;
+			stackValid = true;
+			for (auto s : temp->convStackToSet(f)){
+				this->currentStack.insert(s);
+			}
+			free(f);
+		}
+	}
+	already_AddRefed<mozilla::dom::Element> retVal = CreateElement(aTagName, rv);
+	if (stackValid) this->currentStack = oldStack;
+	return retVal;
+}
+
 void
 nsDocument::SwizzleCustomElement(Element* aElement,
                                  const nsAString& aTypeExtension,
@@ -5974,6 +6006,29 @@ nsDocument::CreateElement(const nsAString& aTagName,
   }
 
   return elem.forget();
+}
+
+already_AddRefed<Element>
+nsDocument::CreateElement(JSContext *cx, const nsAString& aTagName,
+const nsAString& aTypeExtension,
+ErrorResult& rv){
+	std::unordered_set<std::string> oldStack;
+	bool stackValid = false;
+	nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(this);
+	if (cx != NULL){
+		if (temp->OwnerDoc() != NULL){
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			oldStack = this->currentStack;
+			stackValid = true;
+			for (auto s : temp->convStackToSet(f)){
+				this->currentStack.insert(s);
+			}
+			free(f);
+		}
+	}
+	already_AddRefed<mozilla::dom::Element> retVal = CreateElement(aTagName, aTypeExtension, rv);
+	if (stackValid) this->currentStack = oldStack;
+	return retVal;
 }
 
 NS_IMETHODIMP

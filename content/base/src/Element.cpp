@@ -2960,6 +2960,11 @@ Element::GetInnerHTML(nsAString& aInnerHTML)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Element::GetInnerHTML(JSContext *cx, nsAString& aInnerHTML){
+	return GetInnerHTML(aInnerHTML);
+}
+
 void
 Element::SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError)
 {
@@ -2967,9 +2972,35 @@ Element::SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError)
 }
 
 void
+Element::SetInnerHTML(JSContext *cx, const nsAString& aInnerHTML, ErrorResult& aError){
+	std::unordered_set<std::string> oldStack;
+	bool stackValid = false;
+	nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(this);
+	nsIDocument* od = temp->OwnerDoc();
+	if (cx != NULL){
+		if (od != NULL){
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			oldStack = od->currentStack;
+			stackValid = true;
+			for (auto s : temp->convStackToSet(f)){
+				od->currentStack.insert(s);
+			}
+			free(f);
+		}
+	}
+	SetInnerHTML(aInnerHTML, aError);
+	if (stackValid) od->currentStack = oldStack;
+}
+
+void
 Element::GetOuterHTML(nsAString& aOuterHTML)
 {
   GetMarkup(true, aOuterHTML);
+}
+
+void
+Element::GetOuterHTML(JSContext *cx, nsAString& aOuterHTML){
+	GetOuterHTML(aOuterHTML);
 }
 
 void
@@ -3034,6 +3065,27 @@ Element::SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError)
   }
   nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
   parent->ReplaceChild(*fragment, *this, aError);
+}
+
+void
+Element::SetOuterHTML(JSContext *cx, const nsAString& aOuterHTML, ErrorResult& aError){
+	std::unordered_set<std::string> oldStack;
+	bool stackValid = false;
+	nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(this);
+	nsIDocument* od = temp->OwnerDoc();
+	if (cx != NULL){
+		if (od != NULL){
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			oldStack = od->currentStack;
+			stackValid = true;
+			for (auto s : temp->convStackToSet(f)){
+				od->currentStack.insert(s);
+			}
+			free(f);
+		}
+	}
+	SetOuterHTML(aOuterHTML, aError);
+	if (stackValid) od->currentStack = oldStack;
 }
 
 enum nsAdjacentPosition {

@@ -698,6 +698,7 @@ public:
 	  std::vector<std::string> selectorAttrName;	//For selector rep //script[@id='sdf' and @class='fff'] this array should be {'id', 'class'}
 	  std::vector<std::string> selectorAttrValue;	//shud be {'sdf', 'fff'}
 	  std::string rawValue;				//store the original raw policy string read from the file.
+	  bool own;
 
 	  repType rType;
 	  matchingType mType;
@@ -710,6 +711,7 @@ public:
 		  mType = exact;
 		  parent = 0;
 		  rawValue = "";
+		  own = false;
 	  }
   };
 
@@ -1288,6 +1290,9 @@ public:
   using nsIDocument::CreateElement;
   using nsIDocument::CreateElementNS;
   virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,
+                                                  const nsAString& aTypeExtension,
+                                                  mozilla::ErrorResult& rv) MOZ_OVERRIDE;
+  virtual already_AddRefed<Element> CreateElement(JSContext *cx, const nsAString& aTagName,
                                                   const nsAString& aTypeExtension,
                                                   mozilla::ErrorResult& rv) MOZ_OVERRIDE;
   virtual already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,

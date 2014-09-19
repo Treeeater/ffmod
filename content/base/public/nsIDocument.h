@@ -2122,11 +2122,16 @@ public:
     GetElementsByClassName(const nsAString& aClasses);
   // GetElementById defined above
   already_AddRefed<Element> CreateElement(const nsAString& aTagName,
-                                          mozilla::ErrorResult& rv);
+	  mozilla::ErrorResult& rv);
+  already_AddRefed<Element> CreateElement(JSContext *cx, const nsAString& aTagName,
+	  mozilla::ErrorResult& rv);
   already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,
                                             const nsAString& aQualifiedName,
                                             mozilla::ErrorResult& rv);
   virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,
+                                                  const nsAString& aTypeExtension,
+                                                  mozilla::ErrorResult& rv) = 0;
+  virtual already_AddRefed<Element> CreateElement(JSContext *cx, const nsAString& aTagName,
                                                   const nsAString& aTypeExtension,
                                                   mozilla::ErrorResult& rv) = 0;
   virtual already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,
@@ -2664,6 +2669,7 @@ public:
 	};
 
 	std::map<std::string, records> mRecords;
+	std::unordered_set<std::string> currentStack;		//for node ownership assignment purposes.
 	
 	bool outputed = false;
 
