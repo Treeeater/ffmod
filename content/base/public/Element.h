@@ -131,7 +131,8 @@ public:
   {
     NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE,
                       "Bad NodeType in aNodeInfo");
-    SetIsElement();
+	SetIsElement();
+	this->node3POwners = this->OwnerDoc()->currentStack;
   }
 #endif // MOZILLA_INTERNAL_API
 
@@ -789,9 +790,13 @@ public:
   }
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
+  NS_IMETHOD GetInnerHTML(JSContext *cx, nsAString& aInnerHTML);
   virtual void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
+  virtual void SetInnerHTML(JSContext *cx, const nsAString& aInnerHTML, ErrorResult& aError);
   void GetOuterHTML(nsAString& aOuterHTML);
   void SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError);
+  void GetOuterHTML(JSContext *cx, nsAString& aOuterHTML);
+  void SetOuterHTML(JSContext *cx, const nsAString& aOuterHTML, ErrorResult& aError);
   void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
                           ErrorResult& aError);
 

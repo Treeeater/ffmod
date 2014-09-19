@@ -398,6 +398,7 @@ public:
   virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
 
   std::unordered_set<std::string> stackInfo;
+  std::unordered_set<std::string> node3POwners;
 
 protected:
   /**
