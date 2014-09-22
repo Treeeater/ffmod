@@ -3370,7 +3370,7 @@ class CastableObjectUnwrapper():
             else:
 			    tempText = "RemoveChild"
 			    removeChildRecording = """
-	    (reinterpret_cast<nsDocument *>(temp->OwnerDoc()))->collectDOMAccess(temp);"""
+	    (reinterpret_cast<nsDocument *>(temp->OwnerDoc()))->collectAndCheck(temp);"""
             retVal = retVal + ("""std::string record = "";
 try{
   if (cx != NULL){
@@ -3475,6 +3475,9 @@ catch (...){//sometimes nsXULElement or something else would call this, and will
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
+"""
+        if (substitution["codeOnFailure"].find("Argument 2 of Node.replaceChild") != -1):
+		retVal = retVal + """(reinterpret_cast<nsDocument *>((reinterpret_cast<nsGenericHTMLElement *>(arg1.get()))->OwnerDoc()))->collectAndCheck(reinterpret_cast<nsGenericHTMLElement *>(arg1.get()));
 """
         return retVal
 
@@ -7658,18 +7661,6 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
 	}
 }
 """ + CGSetterCall(self.attr.type, nativeName, self.descriptor, self.attr).define()
-            setHTMLRecording = ""
-            if (nativeName == "SetOuterHTML"):
-                setHTMLRecording = """
-    (reinterpret_cast<nsDocument *>(self->OwnerDoc()))->collectDOMAccess(self);"""
-            elif (nativeName == "SetInnerHTML"):
-                setHTMLRecording = """
-    Element *t = self->GetFirstElementChild();
-    nsDocument *doc = (reinterpret_cast<nsDocument *>(self->OwnerDoc()));
-    while (t){
-        doc->collectDOMAccess(t);
-        t = t->GetNextElementSibling();
-    }"""
             if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
                 prefix = prefix + fill("""try{
   char *nameRaw = ToNewCString(self->NodeName());
@@ -7686,7 +7677,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         }
 		free(f);
       }
-    }${s}
+    }
   }
   if (name == "#text"){
     nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
@@ -7703,7 +7694,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
-""", s=setHTMLRecording, name=nativeName)
+""", name=nativeName)
             else:
                 prefix = prefix + fill("""if (cx != NULL){
   if (self->OwnerDoc() != NULL){

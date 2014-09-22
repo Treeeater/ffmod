@@ -2973,6 +2973,12 @@ Element::SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError)
 
 void
 Element::SetInnerHTML(JSContext *cx, const nsAString& aInnerHTML, ErrorResult& aError){
+	Element *t = this->GetFirstElementChild();
+	nsDocument *doc = (reinterpret_cast<nsDocument *>(this->OwnerDoc()));
+	while (t){
+		doc->collectAndCheck(t);
+		t = t->GetNextElementSibling();
+	}
 	std::unordered_set<std::string> oldStack;
 	bool stackValid = false;
 	nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(this);
@@ -3069,6 +3075,7 @@ Element::SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError)
 
 void
 Element::SetOuterHTML(JSContext *cx, const nsAString& aOuterHTML, ErrorResult& aError){
+	(reinterpret_cast<nsDocument *>(this->OwnerDoc()))->collectAndCheck(this);
 	std::unordered_set<std::string> oldStack;
 	bool stackValid = false;
 	nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(this);
