@@ -682,7 +682,7 @@ public:
   typedef mozilla::dom::Element Element;
   using nsIDocument::GetElementsByTagName;
   void collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool shouldRemove = true);
-  void collectDOMAccess(nsIContent *root);
+  void collectAndCheck(nsIContent *root);
   void clearDOMAccess();
   enum repType { invalid, special, absDOM, selector };
   enum matchingType { exact, subTree, root };
@@ -717,18 +717,20 @@ public:
 
   policyEntry parsePolicy(std::string str);
   void loadPolicy(std::string policyFileName);
-  void loadPolicies(std::string pfRoot);		//preload all policies based on the access of the nodes.
+  void loadPolicies(nsIContent *root, std::string pfRoot);		//preload all policies based on the access of the nodes.
   void mapSelectorToXPathVectors(nsIContent *root, const std::vector<policyEntry> & pWithSelector, std::string curXPath, int index);
   bool checkNodeAgainstSelector(nsIContent *root, const std::string & nodeName, const std::vector<std::string> & selectorAttrName, const std::vector<std::string> & selectorAttrValue);
   std::string checkPolicyAndOutputToString(std::string pfRoot);
-  void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index);
-  bool checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::record r, nsDocument::policyEntry p);
-  bool checkAccessAgainstPolicies(nsIContent* root, nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr);
+  void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool deleted);
+  bool checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument::policyEntry p);
+  bool checkAccessAgainstPolicies(nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr);
   std::map<std::string, std::vector<policyEntry>> m_policies;
-  std::map<std::string, nsIDocument::records> m_violatedRecords;
   std::set<std::string> m_attemptedLoadPolicies;
   std::map<std::string, std::vector<std::string>> m_SelectorMaps;
+  std::map<std::string, nsIDocument::records> m_violatedRecords;
   std::map<std::string, std::map<std::string, nsIDocument::records>> m_matchedRecords;
+  std::map<std::string, nsIDocument::records> m_violatedDeletedRecords;
+  std::map<std::string, std::map<std::string, nsIDocument::records>> m_matchedDeletedRecords;
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_SIZEOF_EXCLUDING_THIS
