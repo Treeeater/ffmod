@@ -722,8 +722,8 @@ public:
   bool checkNodeAgainstSelector(nsIContent *root, const std::string & nodeName, const std::vector<std::string> & selectorAttrName, const std::vector<std::string> & selectorAttrValue);
   std::string checkPolicyAndOutputToString(std::string pfRoot);
   void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index);
-  bool checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::record r, nsDocument::policyEntry p);
-  bool checkAccessAgainstPolicies(nsIContent* root, nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr);
+  bool checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument::policyEntry p);
+  bool checkAccessAgainstPolicies(nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr);
   std::map<std::string, std::vector<policyEntry>> m_policies;
   std::map<std::string, nsIDocument::records> m_violatedRecords;
   std::set<std::string> m_attemptedLoadPolicies;

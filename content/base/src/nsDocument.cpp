@@ -3950,7 +3950,7 @@ nsDocument::checkNodeAgainstSelector(nsIContent *root, const std::string & nodeN
 }
 
 bool 
-nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::record r, nsDocument::policyEntry p){
+nsDocument::checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument::policyEntry p){
 	bool retVal = false;
 	int i = 0;
 	if (p.rType == nsDocument::invalid || p.rType == nsDocument::special) return false;
@@ -3958,7 +3958,14 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 		//test API name limitations first to quickly eliminate candidates
 		if (p.APIName[0] == '!') {
 			std::string forbidden = p.APIName.substr(1);
-			if (forbidden.find(' ') != std::string::npos){
+			if (forbidden.length() == 0){
+				// This is a special case where this policy entry //iframe[@id='abc']>! means: do not touch anything that may affect my selector.
+				for (i = 0; i < p.selectorAttrName.size(); i++){
+					if (r.additionalInfo == std::string("Set") + (char)toupper(p.selectorAttrName[i][0]) + p.selectorAttrName[i].substr(1)) return false;
+					if (r.additionalInfo == "SetAttribute" && r.nodeParamInfo == p.selectorAttrName[i]) return false;
+				}
+			}
+			else if (forbidden.find(' ') != std::string::npos){
 				std::istringstream iss(forbidden);
 				std::vector<std::string> tokens{ std::istream_iterator < std::string > {iss}, std::istream_iterator < std::string > {} };
 				for (auto t : tokens){
@@ -4005,8 +4012,8 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 			found = toMatch.find('*');
 		}
 		if (p.mType == nsDocument::exact && toMatch == res) return true;					//exact match
-		if (p.mType == nsDocument::root && toMatch.find(res) == 0) return true;			//root match
-		if (p.mType == nsDocument::subTree && res.find(toMatch) == 0) return true;		//subTree match
+		if (p.mType == nsDocument::root && res != toMatch && toMatch.find(res) == 0) return true;			//root match
+		if (p.mType == nsDocument::subTree && res != toMatch && res.find(toMatch) == 0) return true;		//subTree match
 		return false;		//non match
 	}
 	else if (p.rType == nsDocument::selector){
@@ -4039,8 +4046,8 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 			}
 			//acutally compare the xpath.
 			if (p.mType == nsDocument::exact && toMatch == res) return true;					//exact match
-			if (p.mType == nsDocument::root && toMatch.find(res) == 0) return true;			//root match
-			if (p.mType == nsDocument::subTree && res.find(toMatch) == 0) return true;		//subTree match
+			if (p.mType == nsDocument::root && res != toMatch && toMatch.find(res) == 0) return true;			//root match
+			if (p.mType == nsDocument::subTree && res != toMatch && res.find(toMatch) == 0) return true;		//subTree match
 		}
 		return false;
 	}
@@ -4049,9 +4056,9 @@ nsDocument::checkAccessAgainstPolicy(nsIContent* root, nsIDocument::records::rec
 }
 
 bool 
-nsDocument::checkAccessAgainstPolicies(nsIContent* root, nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr){
+nsDocument::checkAccessAgainstPolicies(nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr){
 	for (int i = 0; i < m_policies[domain].size(); i++){
-		if (checkAccessAgainstPolicy(root, r, m_policies[domain][i])) {
+		if (checkAccessAgainstPolicy(r, m_policies[domain][i])) {
 			pPtr = &m_policies[domain][i];
 			return true;
 		}
@@ -4210,7 +4217,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 				nsIDocument::records::record rec(resourceToRecordWOwner, record, nodeParamInfo);
 				pPtr = nullptr;
 				//compare against policy
-				if (!checkAccessAgainstPolicies(root, rec, domain, pPtr)){
+				if (!checkAccessAgainstPolicies(rec, domain, pPtr)){
 					//violation of policies, output to string.
 					if (m_violatedRecords.find(domain) == m_violatedRecords.end()){
 						records recs;
@@ -4295,7 +4302,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 		if (this->m_policies.find(domain.first) == this->m_policies.end()) continue;
 		for (auto ra_r : this->mRecords[domain.first].ra_r){
 			std::string res = ra_r.second.resource;
-			if (res[0] == '/' || res.substr(0,3) == "[o]") continue;			//not a special access
+			if (res[0] == '/' || res.substr(0, 3) == "[o]") continue;		//not a special access
 			bool shouldOutput = true;
 			for (auto p : this->m_policies[domain.first]){
 				if (res == "document.write called" && res == p.specialResource && std::regex_match(ra_r.second.additionalInfo, std::regex(p.parameter))){
