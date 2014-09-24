@@ -3359,36 +3359,42 @@ class CastableObjectUnwrapper():
             """,
             **substitution)
         removeChildRecording = ""
-        if (substitution["codeOnFailure"].find("Argument 1 of Node.insertBefore") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.appendChild") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.replaceChild") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.removeChild") != -1):
+        if (substitution["codeOnFailure"].find("Argument 1 of Node.insertBefore") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.appendChild") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.replaceChild") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.removeChild") != -1 or (substitution["codeOnFailure"].find("Argument 2 of Node.replaceChild") != -1)):
             tempText = ""
+            argName = "arg0"
             if (substitution["codeOnFailure"].find("Argument 1 of Node.insertBefore") != -1):
                 tempText = "InsertBefore"
             elif (substitution["codeOnFailure"].find("Argument 1 of Node.appendChild") != -1):
                 tempText = "AppendChild"
             elif (substitution["codeOnFailure"].find("Argument 1 of Node.replaceChild") != -1):
                 tempText = "ReplaceChild"
-            else:
+            elif (substitution["codeOnFailure"].find("Argument 2 of Node.replaceChild") != -1):
+                tempText = "ChildReplaced"
+                argName = "arg1"
+                removeChildRecording = """
+	    (reinterpret_cast<nsDocument *>((reinterpret_cast<nsGenericHTMLElement *>(arg1.get()))->OwnerDoc()))->collectAndCheck(reinterpret_cast<nsGenericHTMLElement *>(arg1.get()));"""
+            elif (substitution["codeOnFailure"].find("Argument 1 of Node.removeChild") != -1):
 			    tempText = "RemoveChild"
 			    removeChildRecording = """
 	    (reinterpret_cast<nsDocument *>(temp->OwnerDoc()))->collectAndCheck(temp);"""
-            retVal = retVal + ("""std::string record = "";
+            retVal = retVal + fill("""std::string record = "";
 try{
   if (cx != NULL){
-	if (arg0.get()->OwnerDoc() != NULL){
-	  char *nameRaw = ToNewCString(arg0.get()->NodeName());
+	if (${argName}.get()->OwnerDoc() != NULL){
+	  char *nameRaw = ToNewCString(${argName}.get()->NodeName());
 	  std::string name = nameRaw;
 	  free(nameRaw);
 	  if (name == "A" || name == "ABBR" || name == "ACRONYM" || name == "ADDRESS" || name == "APPLET" || name == "AREA" || name == "ARTICLE" || name == "ASIDE" || name == "AUDIO" || name == "B" || name == "BASE" || name == "BASEFONT" || name == "BDI" || name == "BDO" || name == "BIG" || name == "BLOCKQUOTE" || name == "BODY" || name == "BR" || name == "BUTTON" || name == "CANVAS" || name == "CAPTION" || name == "CENTER" || name == "CITE" || name == "CODE" || name == "COL" || name == "COLGROUP" || name == "DATALIST" || name == "DD" || name == "DEL" || name == "DETAILS" || name == "DFN" || name == "DIALOG" || name == "DIR" || name == "DIV" || name == "DL" || name == "DT" || name == "EM" || name == "EMBED" || name == "FIELDSET" || name == "FIGCAPTION" || name == "FIGURE" || name == "FONT" || name == "FOOTER" || name == "FORM" || name == "FRAME" || name == "FRAMESET" || name == "H1" || name == "H2" || name == "H3" || name == "H4" || name == "H5" || name == "H6" || name == "HEAD" || name == "HEADER" || name == "HR" || name == "HTML" || name == "I" || name == "IFRAME" || name == "IMG" || name == "INPUT" || name == "INS" || name == "KBD" || name == "KEYGEN" || name == "LABEL" || name == "LEGEND" || name == "LI" || name == "LINK" || name == "MAIN" || name == "MAP" || name == "MARK" || name == "MENU" || name == "MENUITEM" || name == "META" || name == "METER" || name == "NAV" || name == "NOFRAMES" || name == "NOSCRIPT" || name == "OBJECT" || name == "OL" || name == "OPTGROUP" || name == "OPTION" || name == "OUTPUT" || name == "P" || name == "PARAM" || name == "PRE" || name == "PROGRESS" || name == "Q" || name == "RP" || name == "RT" || name == "RUBY" || name == "S" || name == "SAMP" || name == "SCRIPT" || name == "SECTION" || name == "SELECT" || name == "SMALL" || name == "SOURCE" || name == "SPAN" || name == "STRIKE" || name == "STRONG" || name == "STYLE" || name == "SUB" || name == "SUMMARY" || name == "SUP" || name == "TABLE" || name == "TBODY" || name == "TD" || name == "TEXTAREA" || name == "TFOOT" || name == "TH" || name == "THEAD" || name == "TIME" || name == "TITLE" || name == "TR" || name == "TRACK" || name == "TT" || name == "U" || name == "UL" || name == "VAR" || name == "VIDEO" || name == "WBR"){
-	    nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(arg0.get());
+	    nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(${argName}.get());
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 		nsString s;
 		temp->GetOuterHTML(s);
 		char* cs = ToNewUTF8String(s);
 		for (auto s : temp->convStackToSet(f)){
-		  record = "%s->>>" + std::string(cs);
+		  record = std::string("${tempText}->>>") + (reinterpret_cast<nsIContent *>(${argName}.get())->node3POwners.find(s) != reinterpret_cast<nsIContent *>(${argName}.get())->node3POwners.end() ? "[o]" : "") + std::string(cs);
 		}
 		free(cs);
-		free(f);%s
+		free(f);${removeChildRecording}
 	  }
 	  if (name == "#text"){
 		nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
@@ -3397,7 +3403,7 @@ try{
 		temp->GetWholeText(s);
 		char* cs = ToNewUTF8String(s);
 		for (auto s : temp->convStackToSet(f)){
-		  record = "%s->>>" + std::string(cs);
+		  record = std::string("${tempText}->>>") + (${argName}.get()->node3POwners.find(s) != ${argName}.get()->node3POwners.end() ? "[o]" : "") + std::string(cs);
 		}
 		free(cs);
 		free(f);
@@ -3433,7 +3439,7 @@ try{
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
-""" % (tempText, removeChildRecording, tempText) )
+""", tempText = tempText, removeChildRecording = removeChildRecording, argName = argName)
         if (substitution["codeOnFailure"].find("Argument 1 of Element.setAttributeNode") != -1):
             retVal = retVal + """try{
   char *nameRaw = ToNewCString(self->NodeName());
@@ -3475,9 +3481,6 @@ catch (...){//sometimes nsXULElement or something else would call this, and will
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
-"""
-        if (substitution["codeOnFailure"].find("Argument 2 of Node.replaceChild") != -1):
-		retVal = retVal + """(reinterpret_cast<nsDocument *>((reinterpret_cast<nsGenericHTMLElement *>(arg1.get()))->OwnerDoc()))->collectAndCheck(reinterpret_cast<nsGenericHTMLElement *>(arg1.get()));
 """
         return retVal
 
