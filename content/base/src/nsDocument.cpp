@@ -3942,7 +3942,7 @@ nsDocument::checkNodeAgainstSelector(nsIContent *root, const std::string & nodeN
 			std::istringstream iss(selectorAttrValue[i]);
 			std::vector<std::string> tokens{ std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{} };
 			for (auto t : tokens){
-				if (curAttrValue.find(t) == std::string::npos) return false;
+				if (!std::regex_match(curAttrValue, std::regex(t))) return false;
 			}
 		}
 	}
@@ -4205,6 +4205,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 	std::map<std::string, std::map<std::string, nsIDocument::records>> *mr;
 	if (!deleted) mr = &(this->m_matchedRecords);
 	else mr = &(this->m_matchedDeletedRecords);
+	bool owned = false;
 	try {
 		if (root->stackInfo.size() > 0) {
 			//this is a workaround to avoid crashing Firefox when stackInfo is somehow uninitialized. We assume there are less than 1000 3p domains each page.
@@ -4225,11 +4226,15 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 					record = temp.substr(0, a);
 					nodeParamInfo = temp.substr(a + 4);
 				}
-				if (root->node3POwners.find(domain) != root->node3POwners.end()) resourceToRecordWOwner = "[o]" + resourceToRecord;
-				nsIDocument::records::record rec(resourceToRecordWOwner, record, nodeParamInfo);
 				pPtr = nullptr;
+				owned = false;
+				if (root->node3POwners.find(domain) != root->node3POwners.end()) {
+					resourceToRecordWOwner = "[o]" + resourceToRecord;
+					owned = true;
+				}
+				nsIDocument::records::record rec(resourceToRecordWOwner, record, nodeParamInfo);
 				//compare against policy
-				if (!checkAccessAgainstPolicies(rec, domain, pPtr)){
+				if (!owned && !checkAccessAgainstPolicies(rec, domain, pPtr)){	//do not care about owned nodes's access.
 					//violation of policies, output to string.
 					if (vr->find(domain) == vr->end()){
 						records recs;
