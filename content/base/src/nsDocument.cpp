@@ -4197,7 +4197,6 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 	if (xpathWID == curXPath || (xpathWID.length()>1 && xpathWID[1] != '/')) resourceToRecord = curXPath;
 	else resourceToRecord = curXPath + "|" + xpathWID;
 	std::unordered_map<std::string, int> elements;
-	std::string resourceToRecordWOwner = resourceToRecord;
 	policyEntry *pPtr = nullptr;
 	std::map<std::string, nsIDocument::records> *vr;
 	if (!deleted) vr = &(this->m_violatedRecords);
@@ -4205,7 +4204,6 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 	std::map<std::string, std::map<std::string, nsIDocument::records>> *mr;
 	if (!deleted) mr = &(this->m_matchedRecords);
 	else mr = &(this->m_matchedDeletedRecords);
-	bool owned = false;
 	try {
 		if (root->stackInfo.size() > 0) {
 			//this is a workaround to avoid crashing Firefox when stackInfo is somehow uninitialized. We assume there are less than 1000 3p domains each page.
@@ -4227,28 +4225,26 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 					nodeParamInfo = temp.substr(a + 4);
 				}
 				pPtr = nullptr;
-				owned = false;
 				if (root->node3POwners.find(domain) != root->node3POwners.end()) {
-					resourceToRecordWOwner = "[o]" + resourceToRecord;
-					owned = true;
+					continue;			//do not care about owned nodes's access.
 				}
-				nsIDocument::records::record rec(resourceToRecordWOwner, record, nodeParamInfo);
+				nsIDocument::records::record rec(resourceToRecord, record, nodeParamInfo);
 				//compare against policy
-				if (!owned && !checkAccessAgainstPolicies(rec, domain, pPtr)){	//do not care about owned nodes's access.
+				if (!checkAccessAgainstPolicies(rec, domain, pPtr)){	
 					//violation of policies, output to string.
 					if (vr->find(domain) == vr->end()){
 						records recs;
-						recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
+						recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
 						vr->insert(std::pair<std::string, records>(domain, recs));
 					}
 					else {
-						(*vr)[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
+						(*vr)[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
 					}
 				}
 				else{
 					if (mr->find(domain) == mr->end()){
 						records recs;
-						recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
+						recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
 						std::map<std::string, nsIDocument::records> pc;
 						pc.insert(std::pair<std::string, records>(pPtr->rawValue, recs));
 						mr->insert(std::pair<std::string, std::map<std::string, nsIDocument::records>>(domain, pc));
@@ -4256,11 +4252,11 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 					else{
 						if ((*mr)[domain].find(pPtr->rawValue) == (*mr)[domain].end()){
 							records recs;
-							recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
+							recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
 							(*mr)[domain].insert(std::pair<std::string, records>(pPtr->rawValue, recs));
 						}
 						else{
-							(*mr)[domain][pPtr->rawValue].ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
+							(*mr)[domain][pPtr->rawValue].ra_r.insert(std::pair<std::string, records::record>(resourceToRecord + record + nodeParamInfo, rec));
 						}
 					}
 				}
