@@ -2128,6 +2128,9 @@ public:
   already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,
                                             const nsAString& aQualifiedName,
                                             mozilla::ErrorResult& rv);
+  already_AddRefed<Element> CreateElementNS(JSContext *cx, const nsAString& aNamespaceURI,
+                                            const nsAString& aQualifiedName,
+                                            mozilla::ErrorResult& rv);
   virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,
                                                   const nsAString& aTypeExtension,
                                                   mozilla::ErrorResult& rv) = 0;
@@ -2135,6 +2138,10 @@ public:
                                                   const nsAString& aTypeExtension,
                                                   mozilla::ErrorResult& rv) = 0;
   virtual already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,
+                                                    const nsAString& aQualifiedName,
+                                                    const nsAString& aTypeExtension,
+                                                    mozilla::ErrorResult& rv) = 0;
+  virtual already_AddRefed<Element> CreateElementNS(JSContext *cx, const nsAString& aNamespaceURI,
                                                     const nsAString& aQualifiedName,
                                                     const nsAString& aTypeExtension,
                                                     mozilla::ErrorResult& rv) = 0;

@@ -6120,6 +6120,30 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
 }
 
 already_AddRefed<Element>
+nsIDocument::CreateElementNS(JSContext *cx, const nsAString& aNamespaceURI,
+							const nsAString& aQualifiedName,
+							ErrorResult& rv)
+{
+	std::unordered_set<std::string> oldStack;
+	bool stackValid = false;
+	nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(this);
+	if (cx != NULL){
+		if (temp->OwnerDoc() != NULL){
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			oldStack = this->currentStack;
+			stackValid = true;
+			for (auto s : temp->convStackToSet(f)){
+				this->currentStack.insert(s);
+			}
+			free(f);
+		}
+	}
+	already_AddRefed<mozilla::dom::Element> retVal = CreateElementNS(aNamespaceURI, aQualifiedName, rv);
+	if (stackValid) this->currentStack = oldStack;
+	return retVal;
+}
+
+already_AddRefed<Element>
 nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                             const nsAString& aQualifiedName,
                             const nsAString& aTypeExtension,
@@ -6147,6 +6171,31 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   }
 
   return elem.forget();
+}
+
+already_AddRefed<Element> 
+nsDocument::CreateElementNS(JSContext *cx, const nsAString& aNamespaceURI,
+							const nsAString& aQualifiedName,
+							const nsAString& aTypeExtension,
+							mozilla::ErrorResult& rv)
+{
+	std::unordered_set<std::string> oldStack;
+	bool stackValid = false;
+	nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(this);
+	if (cx != NULL){
+		if (temp->OwnerDoc() != NULL){
+			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
+			oldStack = this->currentStack;
+			stackValid = true;
+			for (auto s : temp->convStackToSet(f)){
+				this->currentStack.insert(s);
+			}
+			free(f);
+		}
+	}
+	already_AddRefed<mozilla::dom::Element> retVal = CreateElementNS(aNamespaceURI, aQualifiedName, aTypeExtension, rv);
+	if (stackValid) this->currentStack = oldStack;
+	return retVal;
 }
 
 NS_IMETHODIMP
