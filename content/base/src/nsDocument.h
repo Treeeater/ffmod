@@ -1301,6 +1301,10 @@ public:
                                                     const nsAString& aQualifiedName,
                                                     const nsAString& aTypeExtension,
                                                     mozilla::ErrorResult& rv) MOZ_OVERRIDE;
+  virtual already_AddRefed<Element> CreateElementNS(JSContext *cx, const nsAString& aNamespaceURI,
+                                                    const nsAString& aQualifiedName,
+                                                    const nsAString& aTypeExtension,
+                                                    mozilla::ErrorResult& rv) MOZ_OVERRIDE;
   virtual void UseRegistryFromDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
 
   virtual already_AddRefed<nsIDocument> MasterDocument()
