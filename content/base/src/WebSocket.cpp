@@ -1186,7 +1186,7 @@ WebSocket::Send(JSContext *cx, const nsAString& aData, ErrorResult& aRv)
 		if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 			char *cs = ToNewUTF8String(mOriginalURL);
-			this->GetOwner()->GetDoc()->recordAccess("WebSocket data sent", f, "sent to: " + std::string(cs));
+			this->GetOwner()->GetDoc()->recordAccess("Outgoing network traffic", f, std::string(cs));
 			free(cs);
 			free(f);
 		}

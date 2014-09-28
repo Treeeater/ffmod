@@ -1980,7 +1980,45 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
   if (!mAttrsAndChildren.CanFitMoreAttrs()) {
     return NS_ERROR_FAILURE;
   }
-
+  nsIDocument *od = this->OwnerDoc();
+  if (od != NULL && !od->currentStack.empty()){
+	char *nameRaw = ToNewUTF8String(this->NodeName());
+	std::string nodeName = nameRaw;
+	free(nameRaw);
+	std::string attrName = "";
+	nsCString id;
+	if (aName != nullptr){
+		aName->ToUTF8String(id);
+		char *f = ToNewCString(id);
+		attrName = f;
+		free(f);
+	}
+	if ((nodeName == "SCRIPT" && stricmp(attrName.c_str(), "src") == 0) ||
+		(nodeName == "IMG" && stricmp(attrName.c_str(), "src") == 0) ||
+		(nodeName == "IFRAME" && stricmp(attrName.c_str(), "src") == 0) ||
+		(nodeName == "SOURCE" && stricmp(attrName.c_str(), "src") == 0) ||
+		(nodeName == "LINK" && stricmp(attrName.c_str(), "href") == 0) ||
+		(nodeName == "OBJECT" && stricmp(attrName.c_str(), "data") == 0)
+		){
+		char *attrValueC = ToNewUTF8String(aValue);
+		std::string attrValue = attrValueC;
+		free(attrValueC);
+		if (!(nodeName == "IMG" && attrValue.substr(0, 5) == "data:")){
+			for (auto domain : od->currentStack){
+				if (od->mRecords.find(domain) == od->mRecords.end()){
+					nsIDocument::records recs;
+					nsIDocument::records::record rec("Outgoing network traffic", attrValue, "");
+					recs.ra_r.insert(std::pair<std::string, nsIDocument::records::record>("Outgoing network traffic" + attrValue, rec));
+					od->mRecords.insert(std::pair<std::string, nsIDocument::records>(domain, recs));
+				}
+				else {
+					nsIDocument::records::record rec("Outgoing network traffic", attrValue, "");
+					od->mRecords[domain].ra_r.insert(std::pair<std::string, nsIDocument::records::record>("Outgoing network traffic" + attrValue, rec));
+				}
+			}
+		}
+	}
+  }
   uint8_t modType;
   bool hasListeners;
   nsAttrValueOrString value(aValue);

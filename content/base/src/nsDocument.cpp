@@ -4319,13 +4319,15 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 			if (res[0] == '/' || res.substr(0, 3) == "[o]") continue;		//not a special access
 			bool shouldOutput = true;
 			for (auto p : this->m_policies[domain.first]){
-				if (res == "document.write called" && stricmp(res.c_str(), p.specialResource.c_str())==0 && std::regex_match(ra_r.second.additionalInfo, std::regex(p.parameter))){
-					shouldOutput = false;
-					pPtr = p;
-					break;
+				if (res == "document.write called"){
+					if (stricmp("document.write called", p.specialResource.c_str()) == 0 && std::regex_match(ra_r.second.additionalInfo, std::regex(p.parameter))) shouldOutput = false;
 				}
-				if (res != "document.write called" && stricmp(res.c_str(), p.specialResource.c_str()) == 0) {
-					shouldOutput = false;
+				else if (res == "Outgoing network traffic"){
+					std::string resDomain = getDomain(ra_r.second.additionalInfo);
+					if (resDomain == "" || (p.specialResource.substr(0, 24) == res && p.specialResource.substr(25) == resDomain)) shouldOutput = false;
+				}
+				else if (stricmp(res.c_str(), p.specialResource.c_str()) == 0) shouldOutput = false;
+				if (!shouldOutput){
 					pPtr = p;
 					break;
 				}
