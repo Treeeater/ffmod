@@ -273,7 +273,7 @@ HTMLFormElement::Submit(JSContext *cx, ErrorResult& aRv)
 		if (this->OwnerDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 			char *cs = ToNewUTF8String(aSpec);
-			this->OwnerDoc()->recordAccess("Form submitted", f, "Action URL is: " + std::string(cs));
+			this->OwnerDoc()->recordAccess("Outgoing network traffic", f, std::string(cs));
 			free(cs);
 			free(f);
 		}

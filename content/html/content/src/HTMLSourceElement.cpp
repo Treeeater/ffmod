@@ -32,7 +32,7 @@ void HTMLSourceElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult
 		if (this->OwnerDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 			char *cs = ToNewUTF8String(aSrc);
-			this->OwnerDoc()->recordAccess("Source src set", f, "src set to: " + std::string(cs));
+			this->OwnerDoc()->recordAccess("Outgoing network traffic", f, std::string(cs));
 			free(cs);
 			free(f);
 		}

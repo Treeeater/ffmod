@@ -178,7 +178,7 @@ HTMLScriptElement::SetSrc(JSContext *cx, const nsAString& aSrc, ErrorResult& rv)
 		if (this->OwnerDoc() != NULL){
 			char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 			char *cs = ToNewUTF8String(aSrc);
-			this->OwnerDoc()->recordAccess("Script src set", f, "src set to: " + std::string(cs));
+			this->OwnerDoc()->recordAccess("Outgoing network traffic", f, std::string(cs));
 			free(cs);
 			free(f);
 		}
