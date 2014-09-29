@@ -3358,7 +3358,9 @@ class CastableObjectUnwrapper():
             }
             """,
             **substitution)
-        removeChildRecording = ""
+        executeCollectAndCheck = ""
+        declareShouldCollectAndCheck = ""
+        assignShouldCollectAndCheck = ""
         if (substitution["codeOnFailure"].find("Argument 1 of Node.insertBefore") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.appendChild") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.replaceChild") != -1 or substitution["codeOnFailure"].find("Argument 1 of Node.removeChild") != -1 or (substitution["codeOnFailure"].find("Argument 2 of Node.replaceChild") != -1)):
             tempText = ""
             argName = "arg0"
@@ -3371,13 +3373,21 @@ class CastableObjectUnwrapper():
             elif (substitution["codeOnFailure"].find("Argument 2 of Node.replaceChild") != -1):
                 tempText = "ChildReplaced"
                 argName = "arg1"
-                removeChildRecording = """
-	    (reinterpret_cast<nsDocument *>((reinterpret_cast<nsGenericHTMLElement *>(arg1.get()))->OwnerDoc()))->collectAndCheck(reinterpret_cast<nsGenericHTMLElement *>(arg1.get()));"""
+                declareShouldCollectAndCheck = """
+bool shouldCollectAndCheck = false;"""
+                assignShouldCollectAndCheck = """
+		shouldCollectAndCheck = true;"""
+                executeCollectAndCheck = """
+  if (shouldCollectAndCheck) (reinterpret_cast<nsDocument *>((reinterpret_cast<nsGenericHTMLElement *>(arg1.get()))->OwnerDoc()))->collectAndCheck(reinterpret_cast<nsGenericHTMLElement *>(arg1.get()));"""
             elif (substitution["codeOnFailure"].find("Argument 1 of Node.removeChild") != -1):
 			    tempText = "RemoveChild"
-			    removeChildRecording = """
-	    (reinterpret_cast<nsDocument *>(temp->OwnerDoc()))->collectAndCheck(temp);"""
-            retVal = retVal + fill("""std::string record = "";
+			    declareShouldCollectAndCheck = """
+bool shouldCollectAndCheck = false;"""
+			    assignShouldCollectAndCheck = """
+		shouldCollectAndCheck = true;"""
+			    executeCollectAndCheck = """
+  if (shouldCollectAndCheck) (reinterpret_cast<nsDocument *>(reinterpret_cast<nsGenericHTMLElement *>(arg0.get())->OwnerDoc()))->collectAndCheck(reinterpret_cast<nsGenericHTMLElement *>(arg0.get()));"""
+            retVal = retVal + fill("""std::string record = "";${declareShouldCollectAndCheck}
 try{
   if (cx != NULL){
 	if (${argName}.get()->OwnerDoc() != NULL){
@@ -3394,10 +3404,10 @@ try{
 		  record = std::string("${tempText}->>>") + (reinterpret_cast<nsIContent *>(${argName}.get())->node3POwners.find(s) != reinterpret_cast<nsIContent *>(${argName}.get())->node3POwners.end() ? "[o]" : "") + std::string(cs);
 		}
 		free(cs);
-		free(f);${removeChildRecording}
+		free(f);${assignShouldCollectAndCheck}
 	  }
 	  if (name == "#text"){
-		nsTextNode *temp = reinterpret_cast<nsTextNode *>(self);
+		nsTextNode *temp = reinterpret_cast<nsTextNode *>(${argName}.get());
 		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 		nsString s;
 		temp->GetWholeText(s);
@@ -3434,12 +3444,12 @@ try{
 				free(f);
 			}
 		}
-	}
+	}${executeCollectAndCheck}
   }
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
 }
-""", tempText = tempText, removeChildRecording = removeChildRecording, argName = argName)
+""", tempText = tempText, declareShouldCollectAndCheck = declareShouldCollectAndCheck, executeCollectAndCheck = executeCollectAndCheck, argName = argName, assignShouldCollectAndCheck = assignShouldCollectAndCheck)
         if (substitution["codeOnFailure"].find("Argument 1 of Element.setAttributeNode") != -1):
             retVal = retVal + """try{
   char *nameRaw = ToNewCString(self->NodeName());
