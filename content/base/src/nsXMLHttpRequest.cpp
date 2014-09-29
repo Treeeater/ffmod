@@ -2658,7 +2658,7 @@ nsXMLHttpRequest::Send(JSContext *cx, nsIVariant* aVariant, const Nullable<Reque
   if (cx != NULL) {
 	if (this->GetOwner() != NULL && this->GetOwner()->GetDoc() != NULL){
 	  char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
-	  this->GetOwner()->GetDoc()->recordAccess("XMLHttpRequest sent", f, "Sent to: " + myc_url);
+	  this->GetOwner()->GetDoc()->recordAccess("Outgoing network traffic", f, myc_url);
 	  free(f);
 	}
   }
