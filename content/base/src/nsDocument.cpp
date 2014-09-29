@@ -4297,6 +4297,18 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	m_matchedRecords.clear();
 	//m_matchedDeletedRecords and m_violatedDeletedRecords must not be cleared!
 	loadPolicies(this->GetBodyElement(), pfRoot);
+	//also load policies of third party accesses that do not contain DOM accesses
+	for (auto entries : mRecords){
+		if (this->m_policies.find(entries.first) == this->m_policies.end()) {
+			if (m_attemptedLoadPolicies.find(entries.first) != m_attemptedLoadPolicies.end()) continue;
+			else {
+				//load policy.
+				std::string pfName = pfRoot + entries.first + ".txt";
+				this->loadPolicy(pfName);
+				m_attemptedLoadPolicies.insert(entries.first);
+			}
+		}
+	}
 	//walk all policies to extract all selectors.
 	std::vector<policyEntry> pWithSelector;
 	for (auto ps : m_policies){
