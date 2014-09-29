@@ -1007,19 +1007,15 @@ ErrorResult& aError){
 					char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 					for (auto s : temp->convStackToSet(f)){
 						temp->stackInfo.insert(s + "|_|" + std::string("SetAttribute->>>") + attrName);
-						if ((name == "IMG" || name == "SCRIPT" || name == "IFRAME" || name == "SOURCE") && attrName == "src"){
+						if (((name == "SCRIPT" || name == "IFRAME" || name == "SOURCE") && attrName == "src") || (name == "OBJECT" && attrName == "data") || (name == "LINK" && attrName == "href")){
 							char *cs = ToNewUTF8String(aValue);
-							temp->OwnerDoc()->recordAccess(name + " src set", f, "src set to: " + std::string(cs));
+							temp->OwnerDoc()->recordAccess("Outgoing network traffic", f, std::string(cs));
 							free(cs);
 						}
-						if (name == "OBJECT" && attrName == "data"){
+						if (name == "IMG" && attrName == "src"){
 							char *cs = ToNewUTF8String(aValue);
-							temp->OwnerDoc()->recordAccess(name + " data set", f, "data set to: " + std::string(cs));
-							free(cs);
-						}
-						if (name == "LINK" && attrName == "href"){
-							char *cs = ToNewUTF8String(aValue);
-							temp->OwnerDoc()->recordAccess(name + " href set", f, "href set to: " + std::string(cs));
+							std::string s = cs;
+							if (s.substr(0, 5) != "data:") temp->OwnerDoc()->recordAccess("Outgoing network traffic", f, s);
 							free(cs);
 						}
 					}
