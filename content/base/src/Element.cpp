@@ -964,6 +964,7 @@ Element::GetAttribute(JSContext *cx, const nsAString& aName, DOMString& aReturn)
 		}
 	}
 	catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+		NS_ASSERTION(false, "Element.cpp getAttr.");
 	}
 	GetAttribute(aName, aReturn);
 }
@@ -1036,7 +1037,9 @@ ErrorResult& aError){
 			}
 		}
 	}
-	catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+	catch (...){
+		//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+		NS_ASSERTION(false, "Element.cpp setAttr.");
 	}
 	SetAttribute(aName, aValue, aError);
 }

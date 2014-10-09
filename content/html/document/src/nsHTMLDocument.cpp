@@ -110,6 +110,8 @@
 #include "nsIStringBundle.h"
 #include "nsDOMClassInfo.h"
 
+#include "HTMLScriptElement.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1863,14 +1865,31 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
                             bool aNewlineTerminate)
 {
 	std::string stack = "";
+	char *f;
 	if (cx != NULL) {
-		char *f = JS_EncodeString(cx, JS_ComputeStackString(cx));
-		char *cs = ToNewUTF8String(aText);
+		f = JS_EncodeString(cx, JS_ComputeStackString(cx));
 		stack = f;
-		this->recordAccess("document.write called", f, std::string(cs));
-		free(cs);
-		free(f);
 	}
+	try {
+		HTMLScriptElement *cse = (HTMLScriptElement *)(this->mScriptLoader->GetCurrentParserInsertedScript());
+		if (cse != NULL){
+			//if cse is null, it means this document.write happens in another iframe, which we don't care.
+			nsGenericHTMLElement *temp = reinterpret_cast<nsGenericHTMLElement *>(cse->GetParent());
+			if (cx != NULL && temp != NULL){
+				if (temp->OwnerDoc() != NULL){
+					char *cs = ToNewUTF8String(aText);
+					for (auto s : temp->convStackToSet(f)){
+						temp->stackInfo.insert(s + "|_|document.write->>>" + std::string(cs));
+					}
+					free(cs);
+				}
+			}
+		}
+	}
+	catch (...){
+		NS_ASSERTION(false, "document.write get current script element failure");
+	}
+	free(f);
   mTooDeepWriteRecursion =
     (mWriteLevel > NS_MAX_DOCUMENT_WRITE_DEPTH || mTooDeepWriteRecursion);
   NS_ENSURE_STATE(!mTooDeepWriteRecursion);

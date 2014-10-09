@@ -622,8 +622,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  try { clone.get()->node3POwners = aNode->node3POwners; }			//cloning shud retain the node3pOwners tag.
-  catch (...) {}
+  try { if (clone.get() != NULL) clone.get()->node3POwners = aNode->node3POwners; }			//cloning shud retain the node3pOwners tag.
+  catch (...) {
+	  NS_ASSERTION(false, "nsNodeUtils.cpp cloneNodes.");
+  }
 
   clone.forget(aResult);
 
