@@ -4264,6 +4264,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 		}
 	}
 	catch (...){
+		NS_ASSERTION(false, "nsDocument.cpp recursiveCheck.");
 	}
 	//visit all children
 	nsIContent* next = root;
@@ -4476,6 +4477,7 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 		}
 	}
 	catch (...){
+		NS_ASSERTION(false, "nsDocument.cpp collectDOMAccess");
 	}
 	//visit all children
 	nsIContent* next = root;

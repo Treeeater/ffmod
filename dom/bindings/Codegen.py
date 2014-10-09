@@ -3448,6 +3448,7 @@ try{
   }
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+    NS_ASSERTION(false, "Codegen.py 1");
 }
 """, tempText = tempText, declareShouldCollectAndCheck = declareShouldCollectAndCheck, executeCollectAndCheck = executeCollectAndCheck, argName = argName, assignShouldCollectAndCheck = assignShouldCollectAndCheck)
         if (substitution["codeOnFailure"].find("Argument 1 of Element.setAttributeNode") != -1):
@@ -3486,6 +3487,7 @@ catch (...){//sometimes nsXULElement or something else would call this, and will
   }
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+    NS_ASSERTION(false, "Codegen.py 2");
 }
 """
         return retVal
@@ -7123,6 +7125,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
   }
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+    NS_ASSERTION(false, "Codegen.py 3");
 }
 """, name=nativeName)
             else:
@@ -7509,6 +7512,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
   }
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+    NS_ASSERTION(false, "Codegen.py 4");
 }
 """, name=nativeName)
             else:
@@ -7698,6 +7702,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
   }
 }
 catch (...){//sometimes nsXULElement or something else would call this, and will throw reinterpret_cast error. catch that if it happens and do nothing.
+    NS_ASSERTION(false, "Codegen.py 5");
 }
 """, name=nativeName)
             else:
