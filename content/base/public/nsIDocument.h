@@ -2650,7 +2650,28 @@ protected:
   bool mDidFireDOMContentLoaded:1;
 public:
 	//yuchen:
-public:
+	bool loadedFriendDomains;
+	std::unordered_set<std::string> friendDomains;
+	std::string defaultPolicyFolder = "/Dropbox/zyc/Research/visualizer/policies/";
+	void loadFriendDomains(){
+		if (loadedFriendDomains) return;
+		std::string line;
+		nsString s;
+		this->GetURL(s);
+		char *hostURIRaw = ToNewCString(s);
+		std::string hostURI = hostURIRaw;
+		free(hostURIRaw);
+		std::ifstream myfile(defaultPolicyFolder + "extra/" + getDomain(hostURI) + "/friend.txt");
+		if (myfile.is_open())
+		{
+			while (getline(myfile, line))
+			{
+				friendDomains.insert(line);
+			}
+			myfile.close();
+		}
+		loadedFriendDomains = true;
+	}
 	class records{
 	public:
 		records(){

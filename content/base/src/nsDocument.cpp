@@ -3908,7 +3908,14 @@ void nsDocument::loadPolicy(std::string policyFileName){
 			lineCount++;
 		}
 		myfile.close();
-		m_policies.insert(std::make_pair(domain, policies));
+		if (m_policies.find(domain) == m_policies.end()) {
+			//loading base policies
+			m_policies.insert(std::make_pair(domain, policies));
+		}
+		else{
+			//loading extra policies, append them to the end.
+			m_policies[domain].insert(m_policies[domain].end(), policies.begin(), policies.end());
+		}
 	}
 }
 
@@ -4092,6 +4099,14 @@ void nsDocument::loadPolicies(nsIContent *root, std::string pfRoot){
 						//load policy.
 						std::string pfName = pfRoot + domain + ".txt";
 						this->loadPolicy(pfName);
+						nsString s;
+						this->GetURL(s);
+						char *hostURIRaw = ToNewCString(s);
+						std::string hostURI = hostURIRaw;
+						free(hostURIRaw);
+						std::string hostDomain = getDomain(hostURI);
+						std::string extraPolicyName = pfRoot + "extra/" + hostDomain + "/" + domain + ".txt";
+						this->loadPolicy(extraPolicyName);
 						m_attemptedLoadPolicies.insert(domain);
 					}
 				}
@@ -4119,6 +4134,14 @@ void nsDocument::loadPolicies(nsIContent *root, std::string pfRoot){
 				//load policy.
 				std::string pfName = pfRoot + domain.first + ".txt";
 				this->loadPolicy(pfName);
+				nsString s;
+				this->GetURL(s);
+				char *hostURIRaw = ToNewCString(s);
+				std::string hostURI = hostURIRaw;
+				free(hostURIRaw);
+				std::string hostDomain = getDomain(hostURI);
+				std::string extraPolicyName = pfRoot + "extra/" + hostDomain + "/" + domain.first + ".txt";
+				this->loadPolicy(extraPolicyName);
 				m_attemptedLoadPolicies.insert(domain.first);
 			}
 		}
@@ -4301,6 +4324,14 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 				//load policy.
 				std::string pfName = pfRoot + entries.first + ".txt";
 				this->loadPolicy(pfName);
+				nsString s;
+				this->GetURL(s);
+				char *hostURIRaw = ToNewCString(s);
+				std::string hostURI = hostURIRaw;
+				free(hostURIRaw);
+				std::string hostDomain = getDomain(hostURI);
+				std::string extraPolicyName = pfRoot + "extra/" + hostDomain + "/" + entries.first + ".txt";
+				this->loadPolicy(extraPolicyName);
 				m_attemptedLoadPolicies.insert(entries.first);
 			}
 		}
@@ -4457,7 +4488,9 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 					record = temp.substr(0, a);
 					nodeParamInfo = temp.substr(a + 4);
 				}
-				if (root->node3POwners.find(domain) != root->node3POwners.end()) resourceToRecordWOwner = "[o]" + resourceToRecord;
+				//the following two lines should be adjusted when the owner strategy changes, the codegen.py [o] place needs to be changed too.
+				//if (root->node3POwners.find(domain) != root->node3POwners.end()) resourceToRecordWOwner = "[o]" + resourceToRecord;			// This line should be used when we assume 3p can disrupt other 3p
+				if (!root->original()) resourceToRecordWOwner = "[o]" + resourceToRecord;			//This line should be used when we assume 3p never disrupt other 3p.
 				records::record rec(resourceToRecordWOwner, record, nodeParamInfo);
 				rec.shouldRemove = shouldRemove;
 				if (mRecords.find(domain) == mRecords.end()){
@@ -4537,7 +4570,7 @@ nsDocument::collectAndCheck(nsIContent *root){
 	if (!sawHtml) return;
 	curXPath = "/HTML[1]" + curXPath;
 	collectDOMAccess(root, curXPath, xpathWID, index, false);
-	loadPolicies(root, "/Dropbox/zyc/Research/visualizer/policies/");				//a compromise solution...
+	loadPolicies(root, this->defaultPolicyFolder);				//a compromise solution...
 	//walk all policies to extract all selectors.
 	std::vector<policyEntry> pWithSelector;
 	for (auto ps : m_policies){
