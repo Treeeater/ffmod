@@ -1598,11 +1598,6 @@ nsIDocument::~nsIDocument()
 
 nsDocument::~nsDocument()
 {
-	/*if (!this->outputed){
-		clearDOMAccess();
-		collectDOMAccess(this->GetBodyElement(), "", 1);
-		this->outputAccessToFile();
-	}*/
 #ifdef PR_LOGGING
   if (gDocumentLeakPRLog)
     PR_LOG(gDocumentLeakPRLog, PR_LOG_DEBUG,
@@ -4297,7 +4292,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	m_SelectorMaps.clear();
 	m_matchedRecords.clear();
 	//m_matchedDeletedRecords and m_violatedDeletedRecords must not be cleared!
-	loadPolicies(this->GetBodyElement(), pfRoot);
+	loadPolicies(this->GetRootElement(), pfRoot);
 	//also load policies of third party accesses that do not contain DOM accesses
 	for (auto entries : mRecords){
 		if (this->m_policies.find(entries.first) == this->m_policies.end()) {
@@ -4320,8 +4315,8 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 			}
 		}
 	}
-	mapSelectorToXPathVectors(this->GetBodyElement(), pWithSelector, "", 1);
-	recursiveCheckAccessAgainstPolicies(this->GetBodyElement(), "", "", 1, false);
+	mapSelectorToXPathVectors(this->GetRootElement(), pWithSelector, "", 1);
+	recursiveCheckAccessAgainstPolicies(this->GetRootElement(), "", "", 1, false);
 	s += "URL: " + hostURI + "\n---\n";
 	policyEntry pPtr;
 	for (auto domain : mRecords){
@@ -4510,12 +4505,12 @@ nsDocument::collectAndCheck(nsIContent *root){
 	nsString s;
 	nsCString id;
 	char *nodeNameRaw;
-	bool sawBody = false;
+	bool sawHtml = false;
 	while (temp){
 		s = temp->NodeName();
 		nodeNameRaw = ToNewCString(s);
-		if (strcmp(nodeNameRaw, "BODY") == 0) {
-			sawBody = true;
+		if (strcmp(nodeNameRaw, "HTML") == 0) {
+			sawHtml = true;
 			break;
 		}
 		if (xpathWID == ""){
@@ -4539,8 +4534,8 @@ nsDocument::collectAndCheck(nsIContent *root){
 		temp = temp->GetParent();
 	}
 	free(nodeNameRaw);
-	if (!sawBody) return;
-	curXPath = "/BODY[1]" + curXPath;
+	if (!sawHtml) return;
+	curXPath = "/HTML[1]" + curXPath;
 	collectDOMAccess(root, curXPath, xpathWID, index, false);
 	loadPolicies(root, "/Dropbox/zyc/Research/visualizer/policies/");				//a compromise solution...
 	//walk all policies to extract all selectors.
@@ -4554,18 +4549,13 @@ nsDocument::collectAndCheck(nsIContent *root){
 		}
 	}
 	m_SelectorMaps.clear();
-	mapSelectorToXPathVectors(this->GetBodyElement(), pWithSelector, "", 1);
+	mapSelectorToXPathVectors(this->GetRootElement(), pWithSelector, "", 1);
 	recursiveCheckAccessAgainstPolicies(root, curXPath, xpathWID, index, true);
 }
 
 void
 nsDocument::DeleteShell()
 {
-	/*if (!this->outputed){
-		clearDOMAccess();
-		collectDOMAccess(this->GetBodyElement(), "", 1);
-		this->outputAccessToFile();
-	}*/
   mExternalResourceMap.HideViewers();
   if (IsEventHandlingEnabled()) {
     RevokeAnimationFrameNotifications();
@@ -9776,11 +9766,6 @@ void
 nsDocument::OnPageHide(bool aPersisted,
                        EventTarget* aDispatchStartTarget)
 {
-	/*if (!this->outputed){
-		clearDOMAccess();
-		collectDOMAccess(this->GetBodyElement(), "", 1);
-		this->outputAccessToFile();
-	}*/
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
   Element* root = GetRootElement();
