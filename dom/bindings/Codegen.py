@@ -3401,7 +3401,8 @@ try{
 		temp->GetOuterHTML(s);
 		char* cs = ToNewUTF8String(s);
 		for (auto s : temp->convStackToSet(f)){
-		  record = std::string("${tempText}->>>") + (reinterpret_cast<nsIContent *>(${argName}.get())->node3POwners.find(s) != reinterpret_cast<nsIContent *>(${argName}.get())->node3POwners.end() ? "[o]" : "") + std::string(cs);
+		  //record = std::string("${tempText}->>>") + (reinterpret_cast<nsIContent *>(${argName}.get())->node3POwners.find(s) != reinterpret_cast<nsIContent *>(${argName}.get())->node3POwners.end() ? "[o]" : "") + std::string(cs);
+		  record = std::string("${tempText}->>>") + (!(reinterpret_cast<nsIContent *>(${argName}.get())->original()) ? "[o]" : "") + std::string(cs);
 		}
 		free(cs);
 		free(f);${assignShouldCollectAndCheck}
@@ -3414,6 +3415,7 @@ try{
 		char* cs = ToNewUTF8String(s);
 		for (auto s : temp->convStackToSet(f)){
 		  record = std::string("${tempText}->>>") + (${argName}.get()->node3POwners.find(s) != ${argName}.get()->node3POwners.end() ? "[o]" : "") + std::string(cs);
+		  record = std::string("${tempText}->>>") + (!(${argName}.get()->original()) ? "[o]" : "") + std::string(cs);
 		}
 		free(cs);
 		free(f);

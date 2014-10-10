@@ -400,6 +400,10 @@ public:
   std::unordered_set<std::string> stackInfo;
   std::unordered_set<std::string> node3POwners;
 
+  int m_original = -1;
+
+  int original();
+
 protected:
   /**
    * WrapNode is called from WrapObject to actually wrap this node, WrapObject

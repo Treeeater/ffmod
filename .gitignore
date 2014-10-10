@@ -19,6 +19,7 @@
 !/dom/bindings/Codegen.py
 !/dom/bindings/Configuration.py
 !/content/base/public/nsINode.h
+!/content/base/src/nsINode.cpp
 !/content/base/src/Text.*
 !/dom/webidl/HTMLDocument.webidl
 !/dom/interfaces/html/nsIDOMHTMLDocument.idl
