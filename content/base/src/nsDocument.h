@@ -72,6 +72,7 @@
 #include "nsIDOMXPathEvaluator.h"
 #include "jsfriendapi.h"
 #include "ImportManager.h"
+#include "../../html/content/src/nsGenericHTMLFrameElement.h"
 
 #include <fstream>
 #include <set>
@@ -721,7 +722,8 @@ public:
   void mapSelectorToXPathVectors(nsIContent *root, const std::vector<policyEntry> & pWithSelector, std::string curXPath, int index);
   bool checkNodeAgainstSelector(nsIContent *root, const std::string & nodeName, const std::vector<std::string> & selectorAttrName, const std::vector<std::string> & selectorAttrValue);
   std::string checkPolicyAndOutputToString(std::string pfRoot);
-  void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool deleted);
+  void outputIFrameDocument(nsGenericHTMLFrameElement *ele, std::string curXPath, std::string xpathWID, int index, bool shouldRemove);
+  void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool notDeleted);
   bool checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument::policyEntry p);
   bool checkAccessAgainstPolicies(nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr);
   std::map<std::string, std::vector<policyEntry>> m_policies;

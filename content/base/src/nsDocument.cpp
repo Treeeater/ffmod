@@ -4194,7 +4194,34 @@ nsDocument::mapSelectorToXPathVectors(nsIContent *root, const std::vector<policy
 }
 
 void 
-nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool deleted){
+nsDocument::outputIFrameDocument(nsGenericHTMLFrameElement *ele, std::string curXPath, std::string xpathWID, int index, bool flag){
+	nsCString host1;
+	nsCString host2;
+	nsIDocument *doc1 = ele->getContentDocument();
+	if (doc1 == nullptr) return;
+	/*doc1->GetDocumentURI()->GetHost(host1);
+	(reinterpret_cast<nsIDocument *>(this))->GetDocumentURI()->GetHost(host2);
+	if (!host1.Equals(host2)) return;*/
+	//now we can confirm we need to collect accesses from this node.
+	//copy special records to main nsIDocument
+	for (auto entry1 : doc1->mRecords){
+		if (mRecords.find(entry1.first) == mRecords.end()){
+			records recs;
+			mRecords.insert(std::pair<std::string, records>(entry1.first, recs));
+		}
+		else {
+			for (auto entry2 : entry1.second.ra_r){
+				nsIDocument::records::record r = entry2.second;
+				if (r.resource[0] == '/' || r.resource[0] == '[') continue;			//ignore dom accesses
+				if (!flag) r.shouldRemove = false;
+				mRecords[entry1.first].ra_r.insert(std::pair<std::string, records::record>(r.resource + r.additionalInfo + r.nodeParamInfo, r));
+			}
+		}
+	}
+}
+
+void 
+nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool notDeleted){
 	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	nsCString id;
@@ -4210,6 +4237,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 	curXPath = curXPath + "/" + nodeNameRaw + "[" + std::to_string(index) + "]";
 	if (idstr != "") { xpathWID = std::string("//") + nodeNameRaw + "[@id='" + idstr + "']"; }
 	else { xpathWID = xpathWID + "/" + nodeNameRaw + "[" + std::to_string(index) + "]"; }
+	if (strcmp(nodeNameRaw, "IFRAME") == 0) outputIFrameDocument(reinterpret_cast<nsGenericHTMLFrameElement *>(root), curXPath, xpathWID, index, notDeleted);
 	free(nodeNameRaw);
 	std::string resourceToRecord;
 	if (xpathWID == curXPath || (xpathWID.length()>1 && xpathWID[1] != '/')) resourceToRecord = curXPath;
@@ -4217,10 +4245,10 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 	std::unordered_map<std::string, int> elements;
 	policyEntry *pPtr = nullptr;
 	std::map<std::string, nsIDocument::records> *vr;
-	if (!deleted) vr = &(this->m_violatedRecords);
+	if (notDeleted) vr = &(this->m_violatedRecords);
 	else vr = &(this->m_violatedDeletedRecords);
 	std::map<std::string, std::map<std::string, nsIDocument::records>> *mr;
-	if (!deleted) mr = &(this->m_matchedRecords);
+	if (notDeleted) mr = &(this->m_matchedRecords);
 	else mr = &(this->m_matchedDeletedRecords);
 	try {
 		if (root->stackInfo.size() > 0) {
@@ -4294,7 +4322,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 		free(nnn);
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		recursiveCheckAccessAgainstPolicies(next, curXPath, xpathWID, elements[nextNodeName], deleted);
+		recursiveCheckAccessAgainstPolicies(next, curXPath, xpathWID, elements[nextNodeName], notDeleted);
 		next = next->GetNextSibling();
 	}
 }
@@ -4347,7 +4375,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 		}
 	}
 	mapSelectorToXPathVectors(this->GetRootElement(), pWithSelector, "", 1);
-	recursiveCheckAccessAgainstPolicies(this->GetRootElement(), "", "", 1, false);
+	recursiveCheckAccessAgainstPolicies(this->GetRootElement(), "", "", 1, true);
 	s += "URL: " + hostURI + "\n---\n";
 	policyEntry pPtr;
 	for (auto domain : mRecords){
@@ -4465,6 +4493,7 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 	curXPath = curXPath + "/" + nodeNameRaw + "[" + std::to_string(index) + "]";
 	if (idstr != "") { xpathWID = std::string("//") + nodeNameRaw + "[@id='" + idstr + "']"; }
 	else { xpathWID = xpathWID + "/" + nodeNameRaw + "[" + std::to_string(index) + "]"; }
+	if (strcmp(nodeNameRaw,"IFRAME")==0) outputIFrameDocument(reinterpret_cast<nsGenericHTMLFrameElement *>(root), curXPath, xpathWID, index, shouldRemove);
 	free(nodeNameRaw);
 	std::string resourceToRecord;
 	if (xpathWID == curXPath || (xpathWID.length()>1 && xpathWID[1]!='/')) resourceToRecord = curXPath;
@@ -4583,7 +4612,7 @@ nsDocument::collectAndCheck(nsIContent *root){
 	}
 	m_SelectorMaps.clear();
 	mapSelectorToXPathVectors(this->GetRootElement(), pWithSelector, "", 1);
-	recursiveCheckAccessAgainstPolicies(root, curXPath, xpathWID, index, true);
+	recursiveCheckAccessAgainstPolicies(root, curXPath, xpathWID, index, false);
 }
 
 void
