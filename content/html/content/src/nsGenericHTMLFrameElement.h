@@ -81,6 +81,11 @@ public:
    */
   static int32_t MapScrollingAttribute(const nsAttrValue* aValue);
 
+  nsIDocument *getContentDocument(){
+	  //yuchen modified.
+	  return GetContentDocument();
+  }
+
 protected:
   virtual mozilla::dom::Element* ThisFrameElement() MOZ_OVERRIDE
   {
