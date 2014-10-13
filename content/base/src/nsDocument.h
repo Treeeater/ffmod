@@ -682,7 +682,7 @@ class nsDocument : public nsIDocument,
 public:
   typedef mozilla::dom::Element Element;
   using nsIDocument::GetElementsByTagName;
-  void collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool shouldRemove = true);
+  void collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, nsDocument *doc, bool shouldRemove = true);
   void collectAndCheck(nsIContent *root);
   void clearDOMAccess();
   enum repType { invalid, special, absDOM, selector };
@@ -723,7 +723,7 @@ public:
   bool checkNodeAgainstSelector(nsIContent *root, const std::string & nodeName, const std::vector<std::string> & selectorAttrName, const std::vector<std::string> & selectorAttrValue);
   std::string checkPolicyAndOutputToString(std::string pfRoot);
   void outputIFrameDocument(nsGenericHTMLFrameElement *ele, std::string curXPath, std::string xpathWID, int index, bool shouldRemove);
-  void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool notDeleted);
+  void recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index, nsDocument *doc, bool notDeleted);
   bool checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument::policyEntry p);
   bool checkAccessAgainstPolicies(nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr);
   std::map<std::string, std::vector<policyEntry>> m_policies;
