@@ -4075,57 +4075,7 @@ nsDocument::checkAccessAgainstPolicies(nsIDocument::records::record r, const std
 }
 
 void nsDocument::loadPolicies(nsIContent *root, std::string pfRoot){
-	//walk the dom tree and load all policies needed.
 	//This function does not clear all policies at the beginning. So if a policy is already loaded and later changed, page needs to be refreshed to reload the policies.
-	std::stack<nsIContent *> curLevel;
-	std::stack<nsIContent *> nextLevel;
-	curLevel.push(root);
-	while (!curLevel.empty()){
-		nsIContent *cur = curLevel.top();
-		curLevel.pop();
-		//visit this node.
-		if (cur->stackInfo.size() > 0) {
-			//visit this first
-			for (auto st : cur->stackInfo){
-				//First, check if such a policy exists. If not, ignore.
-				std::string domain = "";
-				std::string temp = st;
-				std::size_t found = temp.find("|_|");
-				if (found != std::string::npos) domain = temp.substr(0, found);
-				if (m_policies.find(domain) == m_policies.end()){
-					//attempt to find the policy
-					if (m_attemptedLoadPolicies.find(domain) != m_attemptedLoadPolicies.end()) continue;
-					else {
-						//load policy.
-						std::string pfName = pfRoot + domain + ".txt";
-						this->loadPolicy(pfName);
-						nsString s;
-						this->GetURL(s);
-						char *hostURIRaw = ToNewCString(s);
-						std::string hostURI = hostURIRaw;
-						free(hostURIRaw);
-						std::string hostDomain = getDomain(hostURI);
-						std::string extraPolicyName = pfRoot + "extra/" + hostDomain + "/" + domain + ".txt";
-						this->loadPolicy(extraPolicyName);
-						m_attemptedLoadPolicies.insert(domain);
-					}
-				}
-			}
-		}
-		nsIContent* next = cur;
-		next = next->GetFirstChild();
-		std::string nextNodeName;
-		while (next != nullptr && next != NULL){
-			nextLevel.push(next);
-			next = next->GetNextSibling();
-		}
-		if (curLevel.empty()) {
-			curLevel = nextLevel;
-			std::stack<nsIContent *> emptyStack;
-			emptyStack.swap(nextLevel);		//clear next level
-		}
-	}
-	//load special property policies
 	for (auto domain : this->mRecords){
 		if (m_policies.find(domain.first) == m_policies.end()){
 			//attempt to find the policy
@@ -4194,34 +4144,7 @@ nsDocument::mapSelectorToXPathVectors(nsIContent *root, const std::vector<policy
 }
 
 void 
-nsDocument::outputIFrameDocument(nsGenericHTMLFrameElement *ele, std::string curXPath, std::string xpathWID, int index, bool flag){
-	nsCString host1;
-	nsCString host2;
-	nsIDocument *doc1 = ele->getContentDocument();
-	if (doc1 == nullptr) return;
-	/*doc1->GetDocumentURI()->GetHost(host1);
-	(reinterpret_cast<nsIDocument *>(this))->GetDocumentURI()->GetHost(host2);
-	if (!host1.Equals(host2)) return;*/
-	//now we can confirm we need to collect accesses from this node.
-	//copy special records to main nsIDocument
-	for (auto entry1 : doc1->mRecords){
-		if (mRecords.find(entry1.first) == mRecords.end()){
-			records recs;
-			mRecords.insert(std::pair<std::string, records>(entry1.first, recs));
-		}
-		else {
-			for (auto entry2 : entry1.second.ra_r){
-				nsIDocument::records::record r = entry2.second;
-				if (r.resource[0] == '/' || r.resource[0] == '[') continue;			//ignore dom accesses
-				if (!flag) r.shouldRemove = false;
-				mRecords[entry1.first].ra_r.insert(std::pair<std::string, records::record>(r.resource + r.additionalInfo + r.nodeParamInfo, r));
-			}
-		}
-	}
-}
-
-void 
-nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool notDeleted){
+nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string curXPath, std::string xpathWID, int index, nsDocument *doc, bool notDeleted){
 	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	nsCString id;
@@ -4237,7 +4160,6 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 	curXPath = curXPath + "/" + nodeNameRaw + "[" + std::to_string(index) + "]";
 	if (idstr != "") { xpathWID = std::string("//") + nodeNameRaw + "[@id='" + idstr + "']"; }
 	else { xpathWID = xpathWID + "/" + nodeNameRaw + "[" + std::to_string(index) + "]"; }
-	if (strcmp(nodeNameRaw, "IFRAME") == 0) outputIFrameDocument(reinterpret_cast<nsGenericHTMLFrameElement *>(root), curXPath, xpathWID, index, notDeleted);
 	free(nodeNameRaw);
 	std::string resourceToRecord;
 	if (xpathWID == curXPath || (xpathWID.length()>1 && xpathWID[1] != '/')) resourceToRecord = curXPath;
@@ -4245,11 +4167,11 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 	std::unordered_map<std::string, int> elements;
 	policyEntry *pPtr = nullptr;
 	std::map<std::string, nsIDocument::records> *vr;
-	if (notDeleted) vr = &(this->m_violatedRecords);
-	else vr = &(this->m_violatedDeletedRecords);
+	if (notDeleted) vr = &(doc->m_violatedRecords);
+	else vr = &(doc->m_violatedDeletedRecords);
 	std::map<std::string, std::map<std::string, nsIDocument::records>> *mr;
-	if (notDeleted) mr = &(this->m_matchedRecords);
-	else mr = &(this->m_matchedDeletedRecords);
+	if (notDeleted) mr = &(doc->m_matchedRecords);
+	else mr = &(doc->m_matchedDeletedRecords);
 	try {
 		if (root->stackInfo.size() > 0) {
 			//this is a workaround to avoid crashing Firefox when stackInfo is somehow uninitialized. We assume there are less than 1000 3p domains each page.
@@ -4271,7 +4193,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 					nodeParamInfo = temp.substr(a + 4);
 				}
 				pPtr = nullptr;
-				if (root->node3POwners.find(domain) != root->node3POwners.end()) {
+				if (!root->original()) {
 					continue;			//do not care about owned nodes's access.
 				}
 				nsIDocument::records::record rec(resourceToRecord, record, nodeParamInfo);
@@ -4322,7 +4244,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 		free(nnn);
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		recursiveCheckAccessAgainstPolicies(next, curXPath, xpathWID, elements[nextNodeName], notDeleted);
+		recursiveCheckAccessAgainstPolicies(next, curXPath, xpathWID, elements[nextNodeName], doc, notDeleted);
 		next = next->GetNextSibling();
 	}
 }
@@ -4343,6 +4265,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	m_SelectorMaps.clear();
 	m_matchedRecords.clear();
 	//m_matchedDeletedRecords and m_violatedDeletedRecords must not be cleared!
+	collectDOMAccess(GetRootElement(), "", "", 1, this, false);
 	loadPolicies(this->GetRootElement(), pfRoot);
 	//also load policies of third party accesses that do not contain DOM accesses
 	for (auto entries : mRecords){
@@ -4375,7 +4298,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 		}
 	}
 	mapSelectorToXPathVectors(this->GetRootElement(), pWithSelector, "", 1);
-	recursiveCheckAccessAgainstPolicies(this->GetRootElement(), "", "", 1, true);
+	recursiveCheckAccessAgainstPolicies(this->GetRootElement(), "", "", 1, this, true);
 	s += "URL: " + hostURI + "\n---\n";
 	policyEntry pPtr;
 	for (auto domain : mRecords){
@@ -4477,7 +4400,43 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 }
 
 void
-nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, bool shouldRemove){
+nsDocument::outputIFrameDocument(nsGenericHTMLFrameElement *ele, std::string curXPath, std::string xpathWID, int index, bool flag){
+	nsCString host1;
+	nsCString host2;
+	nsIDocument *doc1 = ele->getContentDocument();
+	if (doc1 == nullptr) return;
+	//now we can confirm we need to collect accesses from this node.
+	//collect dom access, this is to check if dom content of this iframe has changed, so that we need to add insideDOMAccess to the output.
+	collectDOMAccess(doc1->GetRootElement(), curXPath, xpathWID, index, reinterpret_cast<nsDocument *>(doc1), flag);
+	//copy special records to main nsIDocument
+	for (auto entry1 : doc1->mRecords){
+		if (mRecords.find(entry1.first) == mRecords.end()){
+			records recs;
+			mRecords.insert(std::pair<std::string, records>(entry1.first, recs));
+		}
+		else {
+			bool DOMAccess = false;
+			for (auto entry2 : entry1.second.ra_r){
+				nsIDocument::records::record r = entry2.second;
+				if (r.resource[0] == '/' || r.resource[0] == '[') {
+					DOMAccess = true;
+					continue;
+				}
+				if (!flag) r.shouldRemove = false;
+				mRecords[entry1.first].ra_r.insert(std::pair<std::string, records::record>(r.resource + r.additionalInfo + r.nodeParamInfo, r));
+			}
+			if (DOMAccess) {
+				ele->stackInfo.insert(entry1.first + "|_|" + "insideDOMAccess");
+				/*nsIDocument::records::record r((curXPath == xpathWID ? curXPath : curXPath + "|" + xpathWID), "insideDOMAccess", "");
+				if (!flag) r.shouldRemove = false;
+				mRecords[entry1.first].ra_r.insert(std::pair<std::string, records::record>(r.resource + r.additionalInfo + r.nodeParamInfo, r));*/
+			}
+		}
+	}
+}
+
+void
+nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string xpathWID, int index, nsDocument *doc, bool shouldRemove){
 	if (root == NULL || root == nullptr) return;
 	nsString s = root->NodeName();
 	nsCString id;
@@ -4522,13 +4481,13 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 				if (!root->original()) resourceToRecordWOwner = "[o]" + resourceToRecord;			//This line should be used when we assume 3p never disrupt other 3p.
 				records::record rec(resourceToRecordWOwner, record, nodeParamInfo);
 				rec.shouldRemove = shouldRemove;
-				if (mRecords.find(domain) == mRecords.end()){
+				if (doc->mRecords.find(domain) == doc->mRecords.end()){
 					records recs;
 					recs.ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
-					mRecords.insert(std::pair<std::string, records>(domain, recs));
+					doc->mRecords.insert(std::pair<std::string, records>(domain, recs));
 				}
 				else {
-					mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
+					doc->mRecords[domain].ra_r.insert(std::pair<std::string, records::record>(resourceToRecordWOwner + record + nodeParamInfo, rec));
 				}
 			}
 		}
@@ -4546,7 +4505,7 @@ nsDocument::collectDOMAccess(nsIContent *root, std::string curXPath, std::string
 		free(nnn);
 		if (elements.find(nextNodeName) != elements.end()) elements[nextNodeName]++;
 		else elements[nextNodeName] = 1;
-		collectDOMAccess(next, curXPath, xpathWID, elements[nextNodeName], shouldRemove);
+		collectDOMAccess(next, curXPath, xpathWID, elements[nextNodeName], doc, shouldRemove);
 		next = next->GetNextSibling();
 	}
 }
@@ -4598,7 +4557,7 @@ nsDocument::collectAndCheck(nsIContent *root){
 	free(nodeNameRaw);
 	if (!sawHtml) return;
 	curXPath = "/HTML[1]" + curXPath;
-	collectDOMAccess(root, curXPath, xpathWID, index, false);
+	collectDOMAccess(root, curXPath, xpathWID, index, this, false);
 	loadPolicies(root, this->defaultPolicyFolder);				//a compromise solution...
 	//walk all policies to extract all selectors.
 	std::vector<policyEntry> pWithSelector;
@@ -4612,7 +4571,7 @@ nsDocument::collectAndCheck(nsIContent *root){
 	}
 	m_SelectorMaps.clear();
 	mapSelectorToXPathVectors(this->GetRootElement(), pWithSelector, "", 1);
-	recursiveCheckAccessAgainstPolicies(root, curXPath, xpathWID, index, false);
+	recursiveCheckAccessAgainstPolicies(root, curXPath, xpathWID, index, this, false);
 }
 
 void
