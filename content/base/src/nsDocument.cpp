@@ -3943,8 +3943,17 @@ nsDocument::checkNodeAgainstSelector(nsIContent *root, const std::string & nodeN
 		else {
 			std::istringstream iss(selectorAttrValue[i]);
 			std::vector<std::string> tokens{ std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{} };
+			std::istringstream curss(curAttrValue);
+			std::vector<std::string> curtokens{ std::istream_iterator<std::string>{curss}, std::istream_iterator<std::string>{} };
 			for (auto t : tokens){
-				if (!std::regex_match(curAttrValue, std::regex(t))) return false;
+				bool matched = false;
+				for (auto cur : curtokens){
+					if (std::regex_match(cur, std::regex(t))) {
+						matched = true;
+						break;
+					}
+				}
+				if (!matched) return false;
 			}
 		}
 	}
