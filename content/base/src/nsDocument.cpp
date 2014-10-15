@@ -3890,22 +3890,15 @@ nsDocument::policyEntry nsDocument::parsePolicy(std::string str){
 void nsDocument::loadPolicy(std::string policyFileName){
 	std::string line;
 	std::ifstream myfile(policyFileName);
-	int lineCount = 0;
 	if (myfile.is_open())
 	{
-		std::string domain = "";
+		std::string domain = policyFileName.substr(policyFileName.find_last_of('/') + 1);			//   /policies/google.com.txt -> google.com.txt
+		domain = domain.substr(0, domain.find_last_of('.'));			//   google.com.txt -> google.com
 		std::vector<nsDocument::policyEntry> policies;
 		while (getline(myfile, line))
 		{
-			//cout << line << '\n';
-			if (lineCount == 0){
-				domain = line;
-			}
-			else {
-				nsDocument::policyEntry p = parsePolicy(line);
-				policies.push_back(p);
-			}
-			lineCount++;
+			nsDocument::policyEntry p = parsePolicy(line);
+			policies.push_back(p);
 		}
 		myfile.close();
 		if (m_policies.find(domain) == m_policies.end()) {
@@ -3916,6 +3909,20 @@ void nsDocument::loadPolicy(std::string policyFileName){
 			//loading extra policies, append them to the end.
 			m_policies[domain].insert(m_policies[domain].end(), policies.begin(), policies.end());
 		}
+	}
+}
+
+void nsDocument::loadGenericExtraPolicy(std::string pfRoot, std::string hostDomain){
+	std::string line;
+	std::ifstream myfile(pfRoot + "extra/" + hostDomain + "/generic.txt");
+	if (myfile.is_open())
+	{
+		while (getline(myfile, line))
+		{
+			nsDocument::policyEntry p = parsePolicy(line);
+			m_genericExtraPolicies.push_back(p);
+		}
+		myfile.close();
 	}
 }
 
@@ -4074,17 +4081,30 @@ nsDocument::checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument:
 
 bool 
 nsDocument::checkAccessAgainstPolicies(nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr){
-	for (int i = 0; i < m_policies[domain].size(); i++){
+	int i;
+	for (i = 0; i < m_policies[domain].size(); i++){
 		if (checkAccessAgainstPolicy(r, m_policies[domain][i])) {
 			pPtr = &m_policies[domain][i];
+			return true;
+		}
+	}
+	for (i = 0; i < m_genericExtraPolicies.size(); i++){
+		if (checkAccessAgainstPolicy(r, m_genericExtraPolicies[i])) {
+			pPtr = &m_genericExtraPolicies[i];
 			return true;
 		}
 	}
 	return false;
 }
 
-void nsDocument::loadPolicies(nsIContent *root, std::string pfRoot){
+void nsDocument::loadPolicies(std::string pfRoot){
 	//This function does not clear all policies at the beginning. So if a policy is already loaded and later changed, page needs to be refreshed to reload the policies.
+	nsString s;
+	this->GetURL(s);
+	char *hostURIRaw = ToNewCString(s);
+	std::string hostURI = hostURIRaw;
+	free(hostURIRaw);
+	std::string hostDomain = getDomain(hostURI);
 	for (auto domain : this->mRecords){
 		if (m_policies.find(domain.first) == m_policies.end()){
 			//attempt to find the policy
@@ -4093,17 +4113,15 @@ void nsDocument::loadPolicies(nsIContent *root, std::string pfRoot){
 				//load policy.
 				std::string pfName = pfRoot + domain.first + ".txt";
 				this->loadPolicy(pfName);
-				nsString s;
-				this->GetURL(s);
-				char *hostURIRaw = ToNewCString(s);
-				std::string hostURI = hostURIRaw;
-				free(hostURIRaw);
-				std::string hostDomain = getDomain(hostURI);
 				std::string extraPolicyName = pfRoot + "extra/" + hostDomain + "/" + domain.first + ".txt";
 				this->loadPolicy(extraPolicyName);
 				m_attemptedLoadPolicies.insert(domain.first);
 			}
 		}
+	}
+	if (!m_loadedGenericPolicies) {
+		this->loadGenericExtraPolicy(pfRoot, hostDomain);
+		m_loadedGenericPolicies = true;
 	}
 }
 
@@ -4275,7 +4293,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	m_matchedRecords.clear();
 	//m_matchedDeletedRecords and m_violatedDeletedRecords must not be cleared!
 	collectDOMAccess(GetRootElement(), "", "", 1, this, false);
-	loadPolicies(this->GetRootElement(), pfRoot);
+	loadPolicies(pfRoot);
 	//also load policies of third party accesses that do not contain DOM accesses
 	for (auto entries : mRecords){
 		if (this->m_policies.find(entries.first) == this->m_policies.end()) {
@@ -4306,6 +4324,11 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 			}
 		}
 	}
+	for (auto gep : m_genericExtraPolicies){
+		if (gep.rType == nsDocument::selector && gep.eleName.size() >= 1){		//ignore //> cases.
+			pWithSelector.push_back(gep);
+		}
+	}
 	mapSelectorToXPathVectors(this->GetRootElement(), pWithSelector, "", 1);
 	recursiveCheckAccessAgainstPolicies(this->GetRootElement(), "", "", 1, this, true);
 	s += "URL: " + hostURI + "\n---\n";
@@ -4323,6 +4346,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 				}
 				else if (res == "Outgoing network traffic"){
 					std::string resDomain = getDomain(ra_r.second.additionalInfo);
+					if (p.specialResource.substr(0, 24) == res && p.specialResource.substr(25) == "*") shouldOutput = false;			//Outgoing network traffic:* matches any domain.
 					if (resDomain == "" || (p.specialResource.substr(0, 24) == res && p.specialResource.substr(25) == resDomain)) shouldOutput = false;
 				}
 				else if (stricmp(res.c_str(), p.specialResource.c_str()) == 0) shouldOutput = false;
@@ -4567,7 +4591,7 @@ nsDocument::collectAndCheck(nsIContent *root){
 	if (!sawHtml) return;
 	curXPath = "/HTML[1]" + curXPath;
 	collectDOMAccess(root, curXPath, xpathWID, index, this, false);
-	loadPolicies(root, this->defaultPolicyFolder);				//a compromise solution...
+	loadPolicies(this->defaultPolicyFolder);				//a compromise solution...
 	//walk all policies to extract all selectors.
 	std::vector<policyEntry> pWithSelector;
 	for (auto ps : m_policies){
@@ -4576,6 +4600,11 @@ nsDocument::collectAndCheck(nsIContent *root){
 			if (p.rType == nsDocument::selector && p.eleName.size() >= 1){		//ignore //> cases.
 				pWithSelector.push_back(p);
 			}
+		}
+	}
+	for (auto gep : m_genericExtraPolicies){
+		if (gep.rType == nsDocument::selector && gep.eleName.size() >= 1){		//ignore //> cases.
+			pWithSelector.push_back(gep);
 		}
 	}
 	m_SelectorMaps.clear();

@@ -718,7 +718,8 @@ public:
 
   policyEntry parsePolicy(std::string str);
   void loadPolicy(std::string policyFileName);
-  void loadPolicies(nsIContent *root, std::string pfRoot);		//preload all policies based on the access of the nodes.
+  void loadGenericExtraPolicy(std::string pfRoot, std::string hostDomain);
+  void loadPolicies(std::string pfRoot);		//preload all policies based on the access of the nodes.
   void mapSelectorToXPathVectors(nsIContent *root, const std::vector<policyEntry> & pWithSelector, std::string curXPath, int index);
   bool checkNodeAgainstSelector(nsIContent *root, const std::string & nodeName, const std::vector<std::string> & selectorAttrName, const std::vector<std::string> & selectorAttrValue);
   std::string checkPolicyAndOutputToString(std::string pfRoot);
@@ -727,6 +728,8 @@ public:
   bool checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument::policyEntry p);
   bool checkAccessAgainstPolicies(nsIDocument::records::record r, const std::string & domain, policyEntry* &pPtr);
   std::map<std::string, std::vector<policyEntry>> m_policies;
+  std::vector<policyEntry> m_genericExtraPolicies;				//generic policies are applicable to all 3p scripts, this is meant to store nodes that the host completely don't care, regardless of which 3p scripts accessed it.
+  bool m_loadedGenericPolicies = false;
   std::set<std::string> m_attemptedLoadPolicies;
   std::map<std::string, std::vector<std::string>> m_SelectorMaps;
   std::map<std::string, nsIDocument::records> m_violatedRecords;
