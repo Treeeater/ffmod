@@ -1878,8 +1878,10 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
 			if (cx != NULL && temp != NULL){
 				if (temp->OwnerDoc() != NULL){
 					char *cs = ToNewUTF8String(aText);
-					for (auto s : temp->convStackToSet(f)){
-						temp->stackInfo.insert(s + "|_|document.write->>>" + std::string(cs));
+					if (strlen(cs) != 0){
+						for (auto s : temp->convStackToSet(f)){
+							temp->stackInfo.insert(s + "|_|document.write->>>" + std::string(cs));
+						}
 					}
 					free(cs);
 				}
