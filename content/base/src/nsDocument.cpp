@@ -4286,11 +4286,14 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	free(cs);
 	std::string s = "";
 	if (hostURI.substr(0, 4) != "http") return s;
+	//all policies are reloaded here, but not when collectAndCheck is called.  In prodcution/evaluation, we don't need to do this.  This is only here because of debugging conveniences.
 	m_policies.clear();
 	m_violatedRecords.clear();
 	m_attemptedLoadPolicies.clear();
 	m_SelectorMaps.clear();
 	m_matchedRecords.clear();
+	m_genericExtraPolicies.clear();
+	m_loadedGenericPolicies = false;
 	//m_matchedDeletedRecords and m_violatedDeletedRecords must not be cleared!
 	collectDOMAccess(GetRootElement(), "", "", 1, this, false);
 	loadPolicies(pfRoot);
