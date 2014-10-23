@@ -3939,6 +3939,10 @@ nsDocument::checkNodeAgainstSelector(nsIContent *root, const std::string & nodeN
 		mozilla::dom::DOMString res;
 		nsDependentString helper;
 		helper.AssignASCII(selectorAttrName[i].c_str());
+		if (selectorAttrValue[i] == ".*"){
+			if (!root->AsElement()->HasAttribute(helper)) return false;
+			else continue;
+		}
 		root->AsElement()->GetAttribute(helper , res);
 		res.ToString(helper);
 		char *temp = ToNewUTF8String(helper);
