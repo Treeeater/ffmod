@@ -4060,18 +4060,29 @@ nsDocument::checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument:
 			}
 			//convert /BODY/SCRIPT[*] to /BODY/SCRIPT[] AND SIMULATENOUSLY also convert the res to this format.
 			std::size_t found = toMatch.find('*');
+			bool needContinue = false;
 			while (found != std::string::npos){
-				if (res.length() <= found + 1) return false;
+				if (res.length() <= found + 1) {
+					needContinue = true;
+					break;
+				}
 				std::string firstHalf = toMatch.substr(0, found);
-				if (firstHalf != res.substr(0, found)) return false;
+				if (firstHalf != res.substr(0, found)) {
+					needContinue = true;
+					break;
+				}
 				std::string secondHalf = toMatch.substr(found + 1);
 				toMatch = firstHalf + secondHalf;
 				secondHalf = res.substr(found + 1);
-				if (secondHalf.find(']') == std::string::npos) return false;
+				if (secondHalf.find(']') == std::string::npos) {
+					needContinue = true;
+					break;
+				}
 				secondHalf = secondHalf.substr(secondHalf.find(']'));
 				res = firstHalf + secondHalf;
 				found = toMatch.find('*');
 			}
+			if (needContinue) continue;
 			//acutally compare the xpath.
 			if (p.mType == nsDocument::exact && toMatch == res) return true;					//exact match
 			if (p.mType == nsDocument::root && res != toMatch && toMatch.find(res) == 0) return true;			//root match
