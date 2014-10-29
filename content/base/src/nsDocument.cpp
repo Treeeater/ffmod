@@ -4224,7 +4224,7 @@ nsDocument::recursiveCheckAccessAgainstPolicies(nsIContent *root, std::string cu
 				std::string temp = st;
 				std::size_t found = temp.find("|_|");
 				if (found != std::string::npos) domain = temp.substr(0, found);
-				if (m_policies.find(domain) == m_policies.end()) continue;
+				if (m_policies.find(domain) == m_policies.end() || friendDomains.find(domain) != friendDomains.end()) continue;
 				//extract further access information from the node.
 				std::string nodeParamInfo = "";
 				temp = temp.substr(found + 3);
@@ -4309,6 +4309,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	m_matchedRecords.clear();
 	m_genericExtraPolicies.clear();
 	m_loadedGenericPolicies = false;
+	if (!this->loadedFriendDomains) loadFriendDomains();
 	//m_matchedDeletedRecords and m_violatedDeletedRecords must not be cleared!
 	collectDOMAccess(GetRootElement(), "", "", 1, this, false);
 	loadPolicies(pfRoot);
@@ -4353,6 +4354,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	policyEntry pPtr;
 	for (auto domain : mRecords){
 		//then check all special accesses
+		if (friendDomains.find(domain.first) != friendDomains.end()) continue;
 		if (this->m_policies.find(domain.first) == this->m_policies.end()) continue;
 		for (auto ra_r : this->mRecords[domain.first].ra_r){
 			std::string res = ra_r.second.resource;
@@ -4565,6 +4567,7 @@ void
 nsDocument::collectAndCheck(nsIContent *root){
 	//used by removeChild, setInnerHTML, etc. To collect the deleted node records and check against policy.
 	if (!root) return;
+	if (!this->loadedFriendDomains) loadFriendDomains();
 	nsIContent *temp = root;
 	int index = 0;
 	std::string curXPath = "";
