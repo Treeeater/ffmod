@@ -700,6 +700,7 @@ public:
 	  std::vector<std::string> selectorAttrValue;	//shud be {'sdf', 'fff'}
 	  std::string rawValue;				//store the original raw policy string read from the file.
 	  bool own;
+	  std::string domain;
 
 	  repType rType;
 	  matchingType mType;
@@ -736,6 +737,7 @@ public:
   std::map<std::string, std::map<std::string, nsIDocument::records>> m_matchedRecords;
   std::map<std::string, nsIDocument::records> m_violatedDeletedRecords;
   std::map<std::string, std::map<std::string, nsIDocument::records>> m_matchedDeletedRecords;
+  std::map<std::string, std::map<std::string, std::vector<std::string>>> m_forbidden;
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_SIZEOF_EXCLUDING_THIS

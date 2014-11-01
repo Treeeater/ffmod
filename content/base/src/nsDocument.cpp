@@ -3898,6 +3898,7 @@ void nsDocument::loadPolicy(std::string policyFileName){
 		while (getline(myfile, line))
 		{
 			nsDocument::policyEntry p = parsePolicy(line);
+			p.domain = domain;
 			policies.push_back(p);
 		}
 		myfile.close();
@@ -3987,9 +3988,11 @@ nsDocument::checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument:
 				if (p.eleName[0] == accessEleName) {
 					// This is a special case where this policy entry //iframe[@id='abc']>! means: do not touch anything that may affect my selector.
 					//of course, if the eleName doesn't match, it won't affect the policy entry selector.
-					for (i = 0; i < p.selectorAttrName.size(); i++){
-						if (r.additionalInfo == std::string("Set") + (char)toupper(p.selectorAttrName[i][0]) + p.selectorAttrName[i].substr(1)) return false;
-						if (r.additionalInfo == "SetAttribute" && r.nodeParamInfo == p.selectorAttrName[i]) return false;
+					if (m_forbidden.find(p.domain) != m_forbidden.end() && m_forbidden[p.domain].find(accessEleName) != m_forbidden[p.domain].end()){
+						for (auto n : m_forbidden[p.domain][accessEleName]){
+							if (r.additionalInfo == std::string("Set") + (char)toupper(n[0]) + n.substr(1)) return false;
+							if (r.additionalInfo == "SetAttribute" && r.nodeParamInfo == n) return false;
+						}
 					}
 				}
 			}
@@ -4120,23 +4123,55 @@ void nsDocument::loadPolicies(std::string pfRoot){
 	std::string hostURI = hostURIRaw;
 	free(hostURIRaw);
 	std::string hostDomain = getDomain(hostURI);
-	for (auto domain : this->mRecords){
-		if (m_policies.find(domain.first) == m_policies.end()){
-			//attempt to find the policy
-			if (m_attemptedLoadPolicies.find(domain.first) != m_attemptedLoadPolicies.end()) continue;
-			else {
-				//load policy.
-				std::string pfName = pfRoot + domain.first + ".txt";
-				this->loadPolicy(pfName);
-				std::string extraPolicyName = pfRoot + "extra/" + hostDomain + "/" + domain.first + ".txt";
-				this->loadPolicy(extraPolicyName);
-				m_attemptedLoadPolicies.insert(domain.first);
-			}
-		}
-	}
 	if (!m_loadedGenericPolicies) {
 		this->loadGenericExtraPolicy(pfRoot, hostDomain);
 		m_loadedGenericPolicies = true;
+	}
+	for (auto mr : this->mRecords){
+		std::string domain = mr.first;
+		if (m_policies.find(domain) == m_policies.end()){
+			//attempt to find the policy
+			if (m_attemptedLoadPolicies.find(domain) != m_attemptedLoadPolicies.end()) continue;
+			else {
+				//load policy.
+				std::string pfName = pfRoot + domain + ".txt";
+				this->loadPolicy(pfName);
+				std::string extraPolicyName = pfRoot + "extra/" + hostDomain + "/" + domain + ".txt";
+				this->loadPolicy(extraPolicyName);
+				m_attemptedLoadPolicies.insert(domain);
+				//construct m_forbidden:
+				if (m_forbidden.find(domain) != m_forbidden.end()){
+					std::map<std::string, std::vector<std::string>> m;
+					m_forbidden.insert(std::make_pair(domain, m));
+				}
+				for (auto p : m_policies[domain]){
+					if (p.rType == selector && p.eleName.size() > 0 && p.APIName == "!"){
+						std::string tagName = p.eleName[0];
+						if (m_forbidden[domain].find(tagName) == m_forbidden[domain].end()){
+							m_forbidden[domain].insert(make_pair(tagName, std::vector<std::string>()));
+						}
+						for (auto an : p.selectorAttrName){
+							if (std::find(m_forbidden[domain][tagName].begin(), m_forbidden[domain][tagName].end(), an) == m_forbidden[domain][tagName].end()){
+								m_forbidden[domain][tagName].push_back(an);
+							}
+						}
+					}
+				}
+				for (auto p : m_genericExtraPolicies){
+					if (p.rType == selector && p.eleName.size() > 0 && p.APIName == "!"){
+						std::string tagName = p.eleName[0];
+						if (m_forbidden[domain].find(tagName) == m_forbidden[domain].end()){
+							m_forbidden[domain].insert(make_pair(tagName, std::vector<std::string>()));
+						}
+						for (auto an : p.selectorAttrName){
+							if (std::find(m_forbidden[domain][tagName].begin(), m_forbidden[domain][tagName].end(), an) != m_forbidden[domain][tagName].end()){
+								m_forbidden[domain][tagName].push_back(an);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -4308,6 +4343,7 @@ std::string nsDocument::checkPolicyAndOutputToString(std::string pfRoot){
 	m_SelectorMaps.clear();
 	m_matchedRecords.clear();
 	m_genericExtraPolicies.clear();
+	m_forbidden.clear();
 	m_loadedGenericPolicies = false;
 	if (!this->loadedFriendDomains) loadFriendDomains();
 	//m_matchedDeletedRecords and m_violatedDeletedRecords must not be cleared!
