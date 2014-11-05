@@ -4005,6 +4005,10 @@ nsDocument::checkAccessAgainstPolicy(nsIDocument::records::record r, nsDocument:
 			}
 			else if (r.additionalInfo == forbidden) return false;
 		}
+		else if (p.APIName == "getSize"){
+			std::string temp = r.additionalInfo;
+			if (temp != "ScrollTop" && temp != "ScrollLeft" && temp != "ScrollHeight" && temp != "ScrollWidth" && temp != "ClientTop" && temp != "ClientWidth" && temp != "ClientLeft" && temp != "ClientHeight" && temp != "GetBoundingClientRect") return false;
+		}
 		else if (r.additionalInfo != p.APIName) return false;
 	}
 	if (p.parameter != ""){
