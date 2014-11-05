@@ -4143,13 +4143,14 @@ void nsDocument::loadPolicies(std::string pfRoot){
 				std::string extraPolicyName = pfRoot + "extra/" + hostDomain + "/" + domain + ".txt";
 				this->loadPolicy(extraPolicyName);
 				m_attemptedLoadPolicies.insert(domain);
+				if (m_policies.find(domain) == m_policies.end()) continue;
 				//construct m_forbidden:
 				if (m_forbidden.find(domain) != m_forbidden.end()){
 					std::map<std::string, std::vector<std::string>> m;
 					m_forbidden.insert(std::make_pair(domain, m));
 				}
 				for (auto p : m_policies[domain]){
-					if (p.rType == selector && p.eleName.size() > 0 && p.APIName == "!"){
+					if (p.rType == selector && p.eleName.size() > 0){
 						std::string tagName = p.eleName[0];
 						if (m_forbidden[domain].find(tagName) == m_forbidden[domain].end()){
 							m_forbidden[domain].insert(make_pair(tagName, std::vector<std::string>()));
@@ -4162,7 +4163,7 @@ void nsDocument::loadPolicies(std::string pfRoot){
 					}
 				}
 				for (auto p : m_genericExtraPolicies){
-					if (p.rType == selector && p.eleName.size() > 0 && p.APIName == "!"){
+					if (p.rType == selector && p.eleName.size() > 0){
 						std::string tagName = p.eleName[0];
 						if (m_forbidden[domain].find(tagName) == m_forbidden[domain].end()){
 							m_forbidden[domain].insert(make_pair(tagName, std::vector<std::string>()));
