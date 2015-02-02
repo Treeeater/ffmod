@@ -1744,7 +1744,7 @@ nsHTMLDocument::CheckPolicyToString(const nsAString& policyFolder, nsAString& _r
 	char *pfRawStr = ToNewUTF8String(policyFolder);
 	std::string pfRoot(pfRawStr);
 	if (pfRoot != "" && pfRoot[pfRoot.length() - 1] != '/') pfRoot = pfRoot + "/";			//make sure the last char is /
-	if (pfRoot == "") pfRoot = "/Dropbox/zyc/Research/visualizer/policies/";				//default folder name
+	if (pfRoot == "") pfRoot = "/policies/";				//default folder name
 	free(pfRawStr);
 	this->clearDOMAccess();
 	std::string s = checkPolicyAndOutputToString(pfRoot);
@@ -1762,7 +1762,7 @@ nsHTMLDocument::CheckPolicyToFile(const nsAString& policyFolder){
 	char *pfRawStr = ToNewUTF8String(policyFolder);
 	std::string pfRoot(pfRawStr);
 	if (pfRoot != "" && pfRoot[pfRoot.length() - 1] != '/') pfRoot = pfRoot + "/";			//make sure the last char is /
-	if (pfRoot == "") pfRoot = "/Dropbox/zyc/Research/visualizer/policies/";				//default folder name
+	if (pfRoot == "") pfRoot = "/policies/";				//default folder name
 	free(pfRawStr);
 	this->clearDOMAccess();
 	std::string s = checkPolicyAndOutputToString(pfRoot);
