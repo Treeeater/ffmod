@@ -25,6 +25,11 @@ ENUMERATE_HOOK_NAME = '_enumerate'
 ENUM_ENTRY_VARIABLE_NAME = 'strings'
 INSTANCE_RESERVED_SLOTS = 1
 
+def excludeP(nativeName, excludedPrefix):
+    for pre in excludedPrefix:
+        if (nativeName.startswith(pre)):
+            return False
+    return True
 
 def memberReservedSlot(member):
     return "(DOM_INSTANCE_RESERVED_SLOTS + %d)" % member.slotIndex
@@ -7071,8 +7076,7 @@ class CGGenericMethod(CGAbstractBindingMethod):
             #endif
             return ok;
             """))
-
-
+	
 class CGSpecializedMethod(CGAbstractStaticMethod):
     """
     A class for generating the C++ code for a specialized method that the JIT
@@ -7091,9 +7095,9 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
         nativeName = CGSpecializedMethod.makeNativeName(self.descriptor,
                                                         self.method)
         prefix = ""
-        excluded = ["SetAttribute", "GetAttribute", "GetFirstChild", "GetLastChild", "GetPreviousSibling", "GetNextSibling", "HasChildNodes", "ChildNodes", "GetParentNode", "GetParentElement", "GetOwnerDocument", "GetNodeName", "NodeType", "GetTagName", "InsertBefore", "AppendChild", "RemoveChild", "ReplaceChild", "Children", "GetNextElementSibling", "GetFirstElementChild", "SetAttributeNode", "Attributes", "QuerySelectorAll", "GetElementsByTagName", "GetElementsByClassName", "GetElementById", "GetElementByName"]
-
-        if self.descriptor.record and (not (nativeName in excluded)):
+        excluded = ["SetAttribute", "GetAttribute", "GetFirstChild", "GetLastChild", "GetPreviousSibling", "GetNextSibling", "HasChildNodes", "ChildNodes", "GetParentNode", "GetParentElement", "GetOwnerDocument", "GetNodeName", "NodeType", "GetTagName", "GetLocalName", "InsertBefore", "AppendChild", "RemoveChild", "ReplaceChild", "Children", "GetNextElementSibling", "GetFirstElementChild", "SetAttributeNode", "Attributes", "QuerySelectorAll", "GetElementsByTagName", "GetElementsByClassName", "GetElementById", "GetElementByName", "OffsetParent"]
+        excludedPrefix = ["SetOn", "GetOn"]
+        if self.descriptor.record and (not (nativeName in excluded)) and (excludeP(nativeName, excludedPrefix)):
 			#g/setattribute require special treatment.
             if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
                 prefix = prefix + fill("""try{
@@ -7479,8 +7483,9 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 maybeWrap=getMaybeWrapValueFuncForType(self.attr.type))
         else:
             prefix = ""
-        excluded = ["SetAttribute", "GetAttribute", "GetFirstChild", "GetLastChild", "GetPreviousSibling", "GetNextSibling", "HasChildNodes", "ChildNodes", "GetParentNode", "GetParentElement", "GetOwnerDocument", "GetNodeName", "NodeType", "GetTagName", "InsertBefore", "AppendChild", "RemoveChild", "ReplaceChild", "Children", "GetNextElementSibling", "GetFirstElementChild", "SetAttributeNode", "Attributes", "QuerySelectorAll", "GetElementsByTagName", "GetElementsByClassName", "GetElementById", "GetElementByName"]
-        if self.descriptor.record and (not (nativeName in excluded)) and (not self.descriptor.special):
+        excluded = ["SetAttribute", "GetAttribute", "GetFirstChild", "GetLastChild", "GetPreviousSibling", "GetNextSibling", "HasChildNodes", "ChildNodes", "GetParentNode", "GetParentElement", "GetOwnerDocument", "GetNodeName", "NodeType", "GetTagName", "GetLocalName", "InsertBefore", "AppendChild", "RemoveChild", "ReplaceChild", "Children", "GetNextElementSibling", "GetFirstElementChild", "SetAttributeNode", "Attributes", "QuerySelectorAll", "GetElementsByTagName", "GetElementsByClassName", "GetElementById", "GetElementByName", "OffsetParent"]
+        excludedPrefix = ["SetOn", "GetOn"]
+        if self.descriptor.record and (not (nativeName in excluded)) and (not self.descriptor.special) and (excludeP(nativeName, excludedPrefix)):
 			#get node name and node type, and node nav is not revealing much information. jquery tends to over-access things this way, therefore we do not mediate these accesses.
             if self.descriptor.nativeType == "mozilla::dom::Element" or self.descriptor.nativeType == "nsINode":
                 prefix = prefix + fill("""try{
@@ -7632,7 +7637,8 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
         nativeName = CGSpecializedSetter.makeNativeName(self.descriptor,
                                                         self.attr)
         prefix = ""
-        if self.descriptor.record:
+        excludedPrefix = ["SetOn", "GetOn"]
+        if self.descriptor.record and (excludeP(nativeName, excludedPrefix)):
             if nativeName == "SetValue" and self.descriptor.special:
                 return """if (cx != NULL){
 	mozilla::dom::Element* ele = self->GetElement();
